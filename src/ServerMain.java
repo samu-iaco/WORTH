@@ -1,5 +1,23 @@
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
 public class ServerMain {
+    private static final int PORT_RMI = 5000;
+
+
     public static void main(String[] args) {
-        System.out.println("hello world");
+        try{
+            //avvio del server RMI
+            RMI_login_Class server = new RMI_login_Class();
+            //Interfaccia remota
+            Registry registry = LocateRegistry.createRegistry(PORT_RMI);
+            registry.rebind("SignUp" , server);
+            //parte TCP
+
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
     }
 }
