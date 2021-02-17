@@ -24,7 +24,8 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../gson-2.8.6.jar" />
+    <property name="project.structure.last.edited" value="Libraries" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
@@ -53,10 +54,10 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="574" y="118" key="#com.intellij.ide.util.MemberChooser/0.0.1536.824@0.0.1536.824" timestamp="1613554363048" />
-    <state x="577" y="153" key="FileChooserDialogImpl" timestamp="1613553223300">
+    <state x="577" y="153" key="FileChooserDialogImpl" timestamp="1613558997493">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="577" y="153" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1613553223300" />
+    <state x="577" y="153" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1613558997493" />
     <state width="1493" height="210" key="GridCell.Tab.0.bottom" timestamp="1613553295781">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
@@ -73,10 +74,10 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state width="1493" height="210" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1613553295780" />
-    <state x="277" y="0" key="SettingsEditor" timestamp="1613553248788">
+    <state x="277" y="0" key="SettingsEditor" timestamp="1613559001967">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="277" y="0" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1613553248788" />
+    <state x="277" y="0" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1613559001967" />
     <state x="445" y="32" key="new project wizard" timestamp="1613553032159">
       <screen x="0" y="0" width="1536" height="824" />
     </state>

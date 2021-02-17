@@ -9,7 +9,7 @@ public class ServerMain {
     public static void main(String[] args) {
         try{
             //avvio del server RMI
-            RMI_login_Class server = new RMI_login_Class();
+            RMI_login_Class server = new RMI_login_Class(); //devo creare il file con la lista degli utenti
             //Interfaccia remota
             Registry registry = LocateRegistry.createRegistry(PORT_RMI);
             registry.rebind("SignUp" , server);

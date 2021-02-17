@@ -5,9 +5,11 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class RMI_login_Class extends UnicastRemoteObject implements RMI_login_Interface {
+    User user;
 
-    protected RMI_login_Class() throws RemoteException {
+    protected RMI_login_Class(User user) throws RemoteException {
         super();
+        this.user = user;
     }
 
     @Override
