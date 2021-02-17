@@ -3,7 +3,7 @@ import Remote.Exception.UserAlreadyExistsException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface RMI_login_Interface extends Remote {
+public interface RMI_register_Interface extends Remote {
 
     /**
      *

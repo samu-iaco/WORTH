@@ -1,9 +1,12 @@
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
     String name;
     String password;
     String status;
 
-    public User(String name, String password) {
+    public User(String name, String password)  {
+        super();
         this.name = name;
         this.password = password;
         this.status = "offline";
@@ -36,5 +39,13 @@ public class User {
     public void changeStatus(String newStatus){
         if(newStatus.equals("online") || newStatus.equals("Online")) this.status = "online";
         else if(newStatus.equals("offline") || newStatus.equals("Offline")) this.status = "offline";
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "user='" + name + '\'' +
+                ", password='" + password + '\'' +
+                '}';
     }
 }
