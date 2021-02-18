@@ -11,7 +11,7 @@ import java.rmi.server.RemoteObject;
 import java.util.Scanner;
 
 public class ClientMain extends RemoteObject {
-    private static final int PORT_RMI = 5000;
+    private static final int PORT_RMI = 5001;
     private static final int PORT_TCP = 9999;
     private static final String ServerAddress = "127.0.0.1";
 
@@ -25,7 +25,7 @@ public class ClientMain extends RemoteObject {
         boolean ok = true;
         SocketChannel socketChannel;
         try{
-            Registry r = LocateRegistry.createRegistry(PORT_RMI);
+            Registry r = LocateRegistry.getRegistry(PORT_RMI);
             RMI_register_Interface registerRMI = (RMI_register_Interface) r.lookup("SignUp");
             socketChannel = SocketChannel.open(); //Apertura socket
             socketChannel.connect(new InetSocketAddress(ServerAddress, PORT_TCP));

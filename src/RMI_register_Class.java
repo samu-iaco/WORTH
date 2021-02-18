@@ -14,7 +14,6 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
     @Override
     public synchronized String register(String nickUtente, String password) throws RemoteException, UserAlreadyExistsException {
         System.out.println("Richiesta di registrazione da parte di: " + nickUtente);
-        String result;
         if(nickUtente.isEmpty() || password.isEmpty()) {
             System.err.println("Il nome utente o la password non possono essere vuoti");
             throw new IllegalArgumentException("Nome utente o password vuoti");

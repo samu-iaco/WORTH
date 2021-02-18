@@ -44,11 +44,12 @@ public class SignedUpUsers {
             //apro lo stream del file
             FileInputStream fis = new FileInputStream(file);
             InputStreamReader in = new InputStreamReader(fis);
-            User[] dataArray = new Gson().fromJson(in,(Type) User[].class);
+            User[] dataArray = new Gson().fromJson(in,User[].class);
+
             ArrayList<User> data = new ArrayList<>();
             //Aggiungo i valori dentro il nuovo arraylist
             Collections.addAll(data,dataArray);
-            System.out.println("ciao");
+
             //inserisco i valori dentro la concurrent Hashmap controllando che nessuno cerchi di modificare
             //i valori che vanno inseriti
             data.forEach(User ->{
@@ -57,6 +58,7 @@ public class SignedUpUsers {
                 }
             });
             fis.close();
+
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -11,7 +11,7 @@ public class TCPServer {
 
     public TCPServer(SignedUpUsers userList) throws IOException {
         serverSocket = new ServerSocket(PORT_TCP);
-
+        System.out.println("server TCP in ascolto su: " + PORT_TCP);
         while(true){
             // Aspetto una connessione
             Socket sock = serverSocket.accept();

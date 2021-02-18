@@ -33,7 +33,7 @@ public class User implements Serializable {
     }
 
     public void setStatus(String status) {
-        this.status = status;
+       this.status = status;
     }
 
     public void changeStatus(String newStatus){
@@ -44,7 +44,7 @@ public class User implements Serializable {
     @Override
     public String toString() {
         return "User{" +
-                "user='" + name + '\'' +
+                "name='" + name + '\'' +
                 ", password='" + password + '\'' +
                 '}';
     }
