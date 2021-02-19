@@ -20,7 +20,11 @@ public class TCPClient {
         oos.writeObject(user);
     }
 
-    public boolean login(String nickName,String password){
-        
+    /**
+     *
+     * @return l'utente connesso
+     */
+    public User getUser(){
+        return this.user;
     }
 }

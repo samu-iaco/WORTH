@@ -104,4 +104,12 @@ public class SignedUpUsers {
             e.printStackTrace();
         }
     }
+
+    /**
+     *
+     * @return restituisce la lista degli utenti registrati
+     */
+    public ConcurrentHashMap<String,User> getList(){
+        return users;
+    }
 }

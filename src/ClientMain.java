@@ -61,6 +61,7 @@ public class ClientMain extends RemoteObject {
     public void login(String[] splittedCommand) throws IOException {
         System.out.println("Tentativo di login da parte di: " + splittedCommand[1]);
         TCPClient client = new TCPClient(new User(splittedCommand[1],splittedCommand[2]));
+        User user = client.getUser();
 
     }
 }
