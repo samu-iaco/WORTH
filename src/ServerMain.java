@@ -23,7 +23,7 @@ public class ServerMain {
             new TCPServer(usersList);
 
 
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 

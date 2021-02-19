@@ -9,17 +9,20 @@ public class TCPServer {
 
     ServerSocket serverSocket; //serverSocket per TCP
 
-    public TCPServer(SignedUpUsers userList) throws IOException {
+    public TCPServer(SignedUpUsers userList) throws IOException, ClassNotFoundException {
         serverSocket = new ServerSocket(PORT_TCP);
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         while(true){
             // Aspetto una connessione
             Socket sock = serverSocket.accept();
-            // Apro gli stream di Input e Output verso il socket
-            //ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
-            //DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
-
             System.out.println("connessione accettata da: " + sock.getInetAddress().getHostAddress());
+            // Apro gli stream di Input e Output verso il socket
+            ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+            DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
+            // Ottengo le informazioni di login dal socket
+            User clientUser = (User) ois.readObject();
+            System.out.println("Utente: " + clientUser.getName());
+            System.out.println("password: " + clientUser.getPassword());
         }
     }
 }

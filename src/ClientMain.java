@@ -1,6 +1,8 @@
 import Remote.Exception.UserAlreadyExistsException;
 
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.rmi.NotBoundException;
@@ -12,9 +14,10 @@ import java.util.Scanner;
 
 public class ClientMain extends RemoteObject {
     private static final int PORT_RMI = 5001;
-    private static final int PORT_TCP = 9999;
-    private static final String ServerAddress = "127.0.0.1";
 
+    private static final String ServerAddress = "127.0.0.1";
+    private DataInputStream dis;
+    private ObjectOutputStream oos;
 
     public static void main(String[] args){
         ClientMain clientMain = new ClientMain();
@@ -27,8 +30,8 @@ public class ClientMain extends RemoteObject {
         try{
             Registry r = LocateRegistry.getRegistry(PORT_RMI);
             RMI_register_Interface registerRMI = (RMI_register_Interface) r.lookup("SignUp");
-            socketChannel = SocketChannel.open(); //Apertura socket
-            socketChannel.connect(new InetSocketAddress(ServerAddress, PORT_TCP));
+            //socketChannel = SocketChannel.open(); //Apertura socket
+            //socketChannel.connect(new InetSocketAddress(ServerAddress, PORT_TCP));
             Scanner in = new Scanner(System.in);
 
 
@@ -38,6 +41,8 @@ public class ClientMain extends RemoteObject {
                 switch (splittedCommand[0].toLowerCase()){
                     case "register":
                         register(splittedCommand,registerRMI);
+                    case "login":
+                        login(splittedCommand);
                 }
             }
         } catch (IOException | NotBoundException | UserAlreadyExistsException e) {
@@ -51,5 +56,11 @@ public class ClientMain extends RemoteObject {
         else if(splittedCommand.length>3) System.out.println("Hai inserito troppi argomenti");
         else result = registerRMI.register(splittedCommand[1],splittedCommand[2]);
         System.out.println(result);
+    }
+
+    public void login(String[] splittedCommand) throws IOException {
+        System.out.println("Tentativo di login da parte di: " + splittedCommand[1]);
+        TCPClient client = new TCPClient(new User(splittedCommand[1],splittedCommand[2]));
+
     }
 }

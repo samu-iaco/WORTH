@@ -1,9 +1,9 @@
 import java.io.Serializable;
 
 public class User implements Serializable {
-    String name;
-    String password;
-    String status;
+    private String name;
+    private String password;
+    private String status;
 
     public User(String name, String password)  {
         super();

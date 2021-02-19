@@ -45,7 +45,6 @@ public class SignedUpUsers {
             FileInputStream fis = new FileInputStream(file);
             InputStreamReader in = new InputStreamReader(fis);
             User[] dataArray = new Gson().fromJson(in,User[].class);
-
             ArrayList<User> data = new ArrayList<>();
             //Aggiungo i valori dentro il nuovo arraylist
             Collections.addAll(data,dataArray);
