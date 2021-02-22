@@ -1,3 +1,4 @@
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
@@ -9,6 +10,8 @@ public class TCPClient {
     private User user;
     private SocketChannel client;
     private ObjectOutputStream oos;
+    private DataInputStream dis;
+    private boolean resultLogin;
 
     public TCPClient(User user) throws IOException {
         this.user = user;
@@ -18,6 +21,8 @@ public class TCPClient {
         oos = new ObjectOutputStream(client.socket().getOutputStream());
         // Invio le credenziali al server
         oos.writeObject(user);
+        dis = new DataInputStream(client.socket().getInputStream());
+        resultLogin = dis.readBoolean();
     }
 
     /**
@@ -27,4 +32,12 @@ public class TCPClient {
     public User getUser(){
         return this.user;
     }
+
+    /**
+     * @return risultato dell'operazione di login
+     */
+    public synchronized Boolean getResultLogin(){
+        return resultLogin;
+    }
+
 }
