@@ -46,6 +46,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                 switch (splittedCommand[0].toLowerCase()){
                     case "register":
                         register(splittedCommand,registerRMI);
+                        break;
                     case "login":
                         if(alreadyLogged){
                             System.err.println("Un utente è gia loggato, prima si deve scollegare");
@@ -59,6 +60,9 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                             registerRMI.registerForCallback(expCallback,splittedCommand[1]);
                         }
                         break;
+                    case "logout":
+                        if(alreadyLogged) alreadyLogged = false;
+                        else System.err.println("Non c'è nessun utente collegato, impossibile effettuare il logout");
                 }
             }
         } catch (IOException | NotBoundException | UserAlreadyExistsException | ClassNotFoundException e) {
@@ -86,6 +90,13 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             System.err.println(client.getLogin().getMessage());
             return false;
         }
+    }
+
+    public boolean logout(String userName) throws IOException {
+        oos.writeObject(userName);
+        System.out.println("chissa chissa");
+
+        return false;
     }
 
     @Override

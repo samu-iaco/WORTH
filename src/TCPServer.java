@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-public class TCPServer{
+public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
 
     ServerSocket serverSocket; //serverSocket per TCP
@@ -43,7 +43,6 @@ public class TCPServer{
         Login<UserAndStatus> login;
 
         if(u.getName().isEmpty() || u.getPassword().isEmpty()){
-            System.err.println("Il nome utente e la password non possono essere vuoti");
             result = "Nome utente o password vuoti";
         }
 
@@ -84,5 +83,33 @@ public class TCPServer{
         }
 
         return login;
+    }
+
+    @Override
+    public String logout(String nickName) throws RemoteException {
+        String result = null;
+
+        if(nickName.isEmpty()){
+            result = "Nome utente o password vuoti";
+        }
+
+
+        ArrayList<User> data = new ArrayList<>();
+        userList.getList().forEach((s, user) -> {
+            synchronized (user){
+                data.add(user);
+            }
+        });
+
+        if(data.isEmpty()) result = "Nessun utente registrato";
+        for(User currUser: data){
+            if(currUser.getName().equals(nickName))
+                if(currUser.getStatus().equals("online")){
+                    register.update(nickName,"offline");
+                    currUser.setStatus("offline");
+                }
+        }
+
+        return result;
     }
 }
