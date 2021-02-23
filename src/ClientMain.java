@@ -10,14 +10,18 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-public class ClientMain extends RemoteObject {
+public class ClientMain extends RemoteObject implements Notify_Interface{
     private static final int PORT_RMI = 5001;
 
     private static final String ServerAddress = "127.0.0.1";
     private DataInputStream dis;
     private ObjectOutputStream oos;
+
+    private ArrayList<UserAndStatus> listUsersStatus;
 
     public static void main(String[] args){
         ClientMain clientMain = new ClientMain();
@@ -26,15 +30,16 @@ public class ClientMain extends RemoteObject {
 
     public void start(){
         boolean ok = true;
+        boolean alreadyLogged = false;
         SocketChannel socketChannel;
         try{
             Registry r = LocateRegistry.getRegistry(PORT_RMI);
             RMI_register_Interface registerRMI = (RMI_register_Interface) r.lookup("SignUp");
-            //socketChannel = SocketChannel.open(); //Apertura socket
-            //socketChannel.connect(new InetSocketAddress(ServerAddress, PORT_TCP));
+
             Scanner in = new Scanner(System.in);
-
-
+            //Inizializzo le callbacks
+            Notify_Interface obj = this;
+            Notify_Interface expCallback = (Notify_Interface) UnicastRemoteObject.exportObject(obj, 0);
             while(ok){
                 String command = in.nextLine();
                 String[] splittedCommand = command.split(" ");
@@ -42,10 +47,21 @@ public class ClientMain extends RemoteObject {
                     case "register":
                         register(splittedCommand,registerRMI);
                     case "login":
-                        login(splittedCommand);
+                        if(alreadyLogged){
+                            System.err.println("Un utente è gia loggato, prima si deve scollegare");
+                            break;
+                        }
+                        boolean resultLogin = login(splittedCommand);
+                        if(resultLogin){
+                            alreadyLogged = true;
+
+                            System.out.println("Registrazione di " + splittedCommand[1] + " alla callback");
+                            registerRMI.registerForCallback(expCallback,splittedCommand[1]);
+                        }
+                        break;
                 }
             }
-        } catch (IOException | NotBoundException | UserAlreadyExistsException e) {
+        } catch (IOException | NotBoundException | UserAlreadyExistsException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -58,9 +74,29 @@ public class ClientMain extends RemoteObject {
         System.out.println(result);
     }
 
-    public void login(String[] splittedCommand) throws IOException {
-        System.out.println("Tentativo di login da parte di: " + splittedCommand[1]);
+    public boolean login(String[] splittedCommand) throws IOException, ClassNotFoundException {
         TCPClient client = new TCPClient(new User(splittedCommand[1],splittedCommand[2]));
 
+        if(client.getLogin().getMessage().equals("OK")){
+            System.out.println("Utente: " + splittedCommand[1] + " correttamente loggato");
+            listUsersStatus = client.getLogin().getList();
+            return true;
+        }
+        else {
+            System.err.println(client.getLogin().getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public void notifyEvent(String userName, String status) throws RemoteException {
+        boolean found = false;
+        System.out.println("Richiesta di aggiornamento di stato " + userName + " " + status);
+        for(UserAndStatus curr: listUsersStatus)
+            if(curr.getUserName().equals(userName)) {
+                found = true;
+                if(!curr.getStatus().equals(status)) curr.setStatus(status);
+            }
+        if(!found) listUsersStatus.add(new UserAndStatus(userName,status));
     }
 }

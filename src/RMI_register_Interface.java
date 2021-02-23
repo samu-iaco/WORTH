@@ -13,4 +13,8 @@ public interface RMI_register_Interface extends Remote {
      * @return "ok" se l'operazione ha aggiunto l'utente
      */
     String register(String nickUtente, String password) throws RemoteException, UserAlreadyExistsException;
+
+    void registerForCallback (Notify_Interface ClientInterface, String nickUtente) throws RemoteException;
+
+    void unregisterForCallback (Notify_Interface ClientInterface) throws RemoteException;
 }

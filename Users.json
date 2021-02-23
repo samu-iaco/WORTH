@@ -3,5 +3,10 @@
     "name": "q",
     "password": "q",
     "status": "offline"
+  },
+  {
+    "name": "samuele",
+    "password": "1234",
+    "status": "offline"
   }
 ]
