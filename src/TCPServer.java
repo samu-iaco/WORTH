@@ -58,26 +58,31 @@ public class TCPServer{
         if(data.isEmpty()) result = "Nessun utente registrato";
         for(User currUser: data){
             if(u.getName().equals(currUser.getName()))
-                if(currUser.getPassword().equals(u.getPassword())){
+                if(u.getPassword().equals(currUser.getPassword())){
                     if(u.getStatus().equals("offline")){
                         tmp = true;
-                        register.update(currUser.getName(),"online");
-                        currUser.setStatus("online");
+                        u.setStatus("online");
+                        register.update(u.getName(),"online");
                     }
                     else result = "Utente già loggato";
 
                 }else result = "password errata";
 
+            System.out.println("sono qui te sei qua loro sono la e questo progetto non mi riesce tralala");
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
         }
-        if(!tmp) {
-            System.err.println("Utente non registrato nel sistema!");
-            System.out.println(result);
-            login = new Login<>(result,null);
+
+        if(!tmp && result == null){
+            result = "Utente non registrato nel sistema";
+        }
+
+        if(tmp){
+            login = new Login<>("OK", list);
         }
         else {
-            login = new Login<>("OK",list);
+            login = new Login<>(result,null);
         }
+
         return login;
     }
 }

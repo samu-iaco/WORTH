@@ -54,9 +54,11 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         boolean resultLogin = login(splittedCommand);
                         if(resultLogin){
                             alreadyLogged = true;
+
                             System.out.println("Registrazione di " + splittedCommand[1] + " alla callback");
                             registerRMI.registerForCallback(expCallback,splittedCommand[1]);
                         }
+                        break;
                 }
             }
         } catch (IOException | NotBoundException | UserAlreadyExistsException | ClassNotFoundException e) {
@@ -74,7 +76,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
     public boolean login(String[] splittedCommand) throws IOException, ClassNotFoundException {
         TCPClient client = new TCPClient(new User(splittedCommand[1],splittedCommand[2]));
-        //RISOLVERE IL NULL QUA, QUINDI CONTROLLARE IL GET LOGIN DENTRO TCP CLIENT
+
         if(client.getLogin().getMessage().equals("OK")){
             System.out.println("Utente: " + splittedCommand[1] + " correttamente loggato");
             listUsersStatus = client.getLogin().getList();
