@@ -1,5 +1,6 @@
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -10,10 +11,10 @@ public class TCPClient {
     private User user;
     private SocketChannel client;
     private ObjectOutputStream oos;
-    private DataInputStream dis;
-    private boolean resultLogin;
+    private ObjectInputStream ois;
+    private Login<UserAndStatus> resultLogin;
 
-    public TCPClient(User user) throws IOException {
+    public TCPClient(User user) throws IOException, ClassNotFoundException {
         this.user = user;
         InetSocketAddress hA = new InetSocketAddress("localhost", PORT_TCP);
         client = SocketChannel.open(hA);
@@ -21,8 +22,8 @@ public class TCPClient {
         oos = new ObjectOutputStream(client.socket().getOutputStream());
         // Invio le credenziali al server
         oos.writeObject(user);
-        dis = new DataInputStream(client.socket().getInputStream());
-        resultLogin = dis.readBoolean();
+        ois = new ObjectInputStream(client.socket().getInputStream());
+        this.resultLogin = (Login) ois.readObject();
     }
 
     /**
@@ -37,6 +38,14 @@ public class TCPClient {
      * @return risultato dell'operazione di login
      */
     public synchronized Boolean getResultLogin(){
+        if(resultLogin.getMessage().equals("OK")){
+            return true;
+        }
+
+        else return false;
+    }
+
+    public synchronized Login<UserAndStatus> getLogin(){
         return resultLogin;
     }
 

@@ -1,6 +1,7 @@
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
@@ -8,11 +9,11 @@ import java.util.ArrayList;
 
 public class TCPServer{
     private static final int PORT_TCP = 9999;
-    private boolean alreadyLogged = false;
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
     RMI_register_Class register;
+    Login<UserAndStatus> resultLogin;
 
 
     public TCPServer(SignedUpUsers userList) throws IOException, ClassNotFoundException {
@@ -26,17 +27,20 @@ public class TCPServer{
 
             // Apro gli stream di Input e Output verso il socket
             ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
-            DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
+            //DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
+            ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
             // Ottengo le informazioni di login dal socket
             User clientUser = (User) ois.readObject();
             register = new RMI_register_Class(userList);
-            if(login(clientUser) && !alreadyLogged) dos.writeBoolean(true);
-            else dos.writeBoolean(false);
+            resultLogin = login(clientUser);
+            oos.writeObject(resultLogin);
         }
     }
 
-    public synchronized boolean login(User u) throws RemoteException {
+    public synchronized Login<UserAndStatus> login(User u) throws RemoteException {
         String result = null;
+        ArrayList<UserAndStatus> list = new ArrayList<>();
+        Login<UserAndStatus> login;
 
         if(u.getName().isEmpty() || u.getPassword().isEmpty()){
             System.err.println("Il nome utente e la password non possono essere vuoti");
@@ -64,16 +68,16 @@ public class TCPServer{
 
                 }else result = "password errata";
 
-
-        }   //bisogno di rappresentare con una lista 
+            list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
+        }
         if(!tmp) {
             System.err.println("Utente non registrato nel sistema!");
             System.out.println(result);
-            return false;
+            login = new Login<>(result,null);
         }
         else {
-            alreadyLogged = true;
-            return true;
+            login = new Login<>("OK",list);
         }
+        return login;
     }
 }
