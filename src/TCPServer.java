@@ -10,6 +10,9 @@ import java.util.ArrayList;
 public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
 
+    private ObjectInputStream ois;
+    private ObjectOutputStream oos;
+
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
     RMI_register_Class register;
@@ -26,15 +29,33 @@ public class TCPServer implements ServerInterface{
             System.out.println("connessione accettata da: " + sock.getInetAddress().getHostAddress());
 
             // Apro gli stream di Input e Output verso il socket
-            ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+            ois = new ObjectInputStream(sock.getInputStream());
             //DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
-            ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
+            oos = new ObjectOutputStream(sock.getOutputStream());
             // Ottengo le informazioni di login dal socket
             User clientUser = (User) ois.readObject();
             register = new RMI_register_Class(userList);
             resultLogin = login(clientUser);
             oos.writeObject(resultLogin);
+
+            start();
         }
+    }
+
+    public void start() {
+        String[] splittedCommand;
+        try{
+            splittedCommand = (String[]) ois.readObject();
+            System.out.println("command: " + splittedCommand[0]);
+            switch (splittedCommand[0]){
+                case "logout":
+                    String resultLogout = logout(splittedCommand[1]);
+                    oos.writeObject(resultLogout);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public synchronized Login<UserAndStatus> login(User u) throws RemoteException {
@@ -107,9 +128,10 @@ public class TCPServer implements ServerInterface{
                 if(currUser.getStatus().equals("online")){
                     register.update(nickName,"offline");
                     currUser.setStatus("offline");
-                }
+                }else result = "l'utente non è online";
+            else result = "L'utente non è registrato nel sistema";
         }
-
+        result = "OK";
         return result;
     }
 }
