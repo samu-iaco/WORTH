@@ -57,6 +57,11 @@ public class TCPServer implements ServerInterface{
                     listToClient = listUsers();
                     oos.writeObject(listToClient); //invio al client
                     break;
+                case "listonlineusers":
+                    ArrayList<UserAndStatus> listOnlineUsers;
+                    listOnlineUsers = listOnlineusers();
+                    oos.writeObject(listOnlineUsers);
+                    break;
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -154,6 +159,24 @@ public class TCPServer implements ServerInterface{
         for(User currUser: data){
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
         }
+        return list;
+    }
+
+    @Override
+    public ArrayList<UserAndStatus> listOnlineusers() {
+        ArrayList<UserAndStatus> list = new ArrayList<>();
+        ArrayList<User> data = new ArrayList<>();
+        userList.getList().forEach((s, user) -> {
+            synchronized (user){
+                data.add(user);
+            }
+        });
+
+        for(User currUser: data){
+            if(currUser.getStatus().equals("online"))
+                list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
+        }
+
         return list;
     }
 }

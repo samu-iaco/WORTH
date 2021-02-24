@@ -89,13 +89,19 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                             System.out.println("Utente: " + splittedCommand[1] + " scollegato");
                         }
                         break;
-
                     case "listusers":
                         if(!alreadyLogged) {
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
                         listusers(splittedCommand);
+                        break;
+                    case "listonlineusers":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        listonlineusers(splittedCommand);
                         break;
                 }
             }
@@ -153,6 +159,16 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             System.out.println(currUser);
         }
 
+    }
+
+    public void listonlineusers(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+
+        ArrayList<UserAndStatus> list= (ArrayList<UserAndStatus>) ois.readObject();
+
+        for(UserAndStatus currUser: list){
+            System.out.println(currUser);
+        }
     }
 
     @Override

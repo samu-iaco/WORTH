@@ -16,4 +16,10 @@ public interface ServerInterface {
      *          con il loro relativo stato
      */
     ArrayList<UserAndStatus> listUsers();
+
+    /**
+     * @return restituisce la lista degli utenti registrati
+     *         ed online nel momento in cui il metodo viene chiamato
+     */
+    ArrayList<UserAndStatus> listOnlineusers();
 }
