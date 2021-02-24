@@ -50,7 +50,13 @@ public class TCPServer implements ServerInterface{
             switch (splittedCommand[0]){
                 case "logout":
                     String resultLogout = logout(splittedCommand[1]);
-                    oos.writeObject(resultLogout);
+                    oos.writeObject(resultLogout); //invio verso il client
+                    break;
+                case "listusers":
+                    ArrayList<UserAndStatus> listToClient;
+                    listToClient = listUsers();
+                    oos.writeObject(listToClient); //invio al client
+                    break;
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -133,5 +139,21 @@ public class TCPServer implements ServerInterface{
         }
 
         return "L'utente non è registrato nel sistema";
+    }
+
+    @Override
+    public ArrayList<UserAndStatus> listUsers(){
+        ArrayList<UserAndStatus> list = new ArrayList<>();
+        ArrayList<User> data = new ArrayList<>();
+        userList.getList().forEach((s, user) -> {
+            synchronized (user){
+                data.add(user);
+            }
+        });
+
+        for(User currUser: data){
+            list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
+        }
+        return list;
     }
 }

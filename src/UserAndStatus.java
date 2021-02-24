@@ -27,4 +27,12 @@ public class UserAndStatus implements Serializable {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    @Override
+    public String toString() {
+        return "Utente{ " +
+                "userName: " + userName + '\'' +
+                ", status: " + status + '\'' +
+                '}';
+    }
 }

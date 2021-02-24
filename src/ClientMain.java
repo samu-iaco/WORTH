@@ -80,10 +80,22 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         break;
                     case "logout":
-                        boolean resultLogout;
+                        boolean resultLogout = false;
                         if(alreadyLogged)
                             resultLogout = logout(splittedCommand[1],splittedCommand);
                         else System.err.println("Non c'è nessun utente collegato, impossibile effettuare il logout");
+                        if(resultLogout) {
+                            alreadyLogged = false;
+                            System.out.println("Utente: " + splittedCommand[1] + " scollegato");
+                        }
+                        break;
+
+                    case "listusers":
+                        if(!alreadyLogged) {
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        listusers(splittedCommand);
                         break;
                 }
             }
@@ -91,6 +103,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             e.printStackTrace();
         }
     }
+
 
     public void register(String[] splittedCommand, RMI_register_Interface registerRMI) throws UserAlreadyExistsException, RemoteException {
         String result = "";
@@ -117,17 +130,29 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     }
 
     public boolean logout(String userName, String[] splittedCommand) throws IOException, ClassNotFoundException {
-        System.out.println("il bro: " + userName + " vuole fare il logout");
+
         //invio al server la richiesta di logout
         oos.writeObject(splittedCommand);
         //ricezione dal server del logout
         String result = (String) ois.readObject();
         System.out.println("result: " + result);
         if(result.equals("OK")){
-            alreadyLogged = false;
             return true;
         }
         else return false;
+    }
+
+    public void listusers(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        System.out.println("richiesta di vedere la lista degli utenti registrati");
+        //invio la richiesta del comando al server
+        oos.writeObject(splittedCommand);
+
+        ArrayList<UserAndStatus> list= (ArrayList<UserAndStatus>) ois.readObject();
+
+        for(UserAndStatus currUser: list){
+            System.out.println(currUser);
+        }
+
     }
 
     @Override
