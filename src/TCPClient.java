@@ -49,4 +49,9 @@ public class TCPClient {
         return resultLogin;
     }
 
+    public boolean logout(String userName){
+        System.out.println("il bro: " + userName + " vuole fare il logout");
+        return false;
+    }
+
 }

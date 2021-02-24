@@ -2,6 +2,7 @@ import Remote.Exception.UserAlreadyExistsException;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -16,10 +17,15 @@ import java.util.Scanner;
 
 public class ClientMain extends RemoteObject implements Notify_Interface{
     private static final int PORT_RMI = 5001;
+    private static final int PORT_TCP = 9999;
 
+    private SocketChannel client;
     private static final String ServerAddress = "127.0.0.1";
     private DataInputStream dis;
     private ObjectOutputStream oos;
+    private ObjectInputStream ois;
+    private Login<UserAndStatus> resultLogin;
+    boolean alreadyLogged = false;
 
     private ArrayList<UserAndStatus> listUsersStatus;
 
@@ -30,34 +36,54 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
     public void start(){
         boolean ok = true;
-        boolean alreadyLogged = false;
+
         SocketChannel socketChannel;
         try{
+            //preparo la connessione RMI
             Registry r = LocateRegistry.getRegistry(PORT_RMI);
             RMI_register_Interface registerRMI = (RMI_register_Interface) r.lookup("SignUp");
+
+            //preparo la connessione TCP
+            InetSocketAddress hA = new InetSocketAddress("localhost", PORT_TCP);
+            client = SocketChannel.open(hA);
+            oos = new ObjectOutputStream(client.socket().getOutputStream());
+            ois = new ObjectInputStream(client.socket().getInputStream());
+
 
             Scanner in = new Scanner(System.in);
             //Inizializzo le callbacks
             Notify_Interface obj = this;
             Notify_Interface expCallback = (Notify_Interface) UnicastRemoteObject.exportObject(obj, 0);
+
             while(ok){
+
                 String command = in.nextLine();
                 String[] splittedCommand = command.split(" ");
                 switch (splittedCommand[0].toLowerCase()){
+
                     case "register":
                         register(splittedCommand,registerRMI);
+                        break;
                     case "login":
+
                         if(alreadyLogged){
                             System.err.println("Un utente è gia loggato, prima si deve scollegare");
                             break;
                         }
-                        boolean resultLogin = login(splittedCommand);
+                        //TCPClient client = new TCPClient(new User(splittedCommand[1],splittedCommand[2]));
+
+                        boolean resultLogin = login(splittedCommand,client);
                         if(resultLogin){
                             alreadyLogged = true;
-
                             System.out.println("Registrazione di " + splittedCommand[1] + " alla callback");
                             registerRMI.registerForCallback(expCallback,splittedCommand[1]);
                         }
+                        break;
+                    case "logout":
+                        boolean resultLogout;
+                        if(alreadyLogged)
+                            resultLogout = logout(splittedCommand[1],splittedCommand);
+                        else System.err.println("Non c'è nessun utente collegato, impossibile effettuare il logout");
                         break;
                 }
             }
@@ -74,18 +100,34 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         System.out.println(result);
     }
 
-    public boolean login(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        TCPClient client = new TCPClient(new User(splittedCommand[1],splittedCommand[2]));
-
-        if(client.getLogin().getMessage().equals("OK")){
+    public boolean login(String[] splittedCommand, SocketChannel client) throws IOException, ClassNotFoundException {
+        //invio al server
+        oos.writeObject(new User(splittedCommand[1],splittedCommand[2]));
+        //ricezione dal server
+        this.resultLogin = (Login) ois.readObject();
+        if(resultLogin.getMessage().equals("OK")){
             System.out.println("Utente: " + splittedCommand[1] + " correttamente loggato");
-            listUsersStatus = client.getLogin().getList();
+            listUsersStatus = resultLogin.getList();
             return true;
         }
         else {
-            System.err.println(client.getLogin().getMessage());
+            System.err.println(resultLogin.getMessage());
             return false;
         }
+    }
+
+    public boolean logout(String userName, String[] splittedCommand) throws IOException, ClassNotFoundException {
+        System.out.println("il bro: " + userName + " vuole fare il logout");
+        //invio al server la richiesta di logout
+        oos.writeObject(splittedCommand);
+        //ricezione dal server del logout
+        String result = (String) ois.readObject();
+        System.out.println("result: " + result);
+        if(result.equals("OK")){
+            alreadyLogged = false;
+            return true;
+        }
+        else return false;
     }
 
     @Override

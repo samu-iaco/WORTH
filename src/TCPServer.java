@@ -7,8 +7,11 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-public class TCPServer{
+public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
+
+    private ObjectInputStream ois;
+    private ObjectOutputStream oos;
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
@@ -26,15 +29,33 @@ public class TCPServer{
             System.out.println("connessione accettata da: " + sock.getInetAddress().getHostAddress());
 
             // Apro gli stream di Input e Output verso il socket
-            ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+            ois = new ObjectInputStream(sock.getInputStream());
             //DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
-            ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
+            oos = new ObjectOutputStream(sock.getOutputStream());
             // Ottengo le informazioni di login dal socket
             User clientUser = (User) ois.readObject();
             register = new RMI_register_Class(userList);
             resultLogin = login(clientUser);
             oos.writeObject(resultLogin);
+
+            start();
         }
+    }
+
+    public void start() {
+        String[] splittedCommand;
+        try{
+            splittedCommand = (String[]) ois.readObject();
+            System.out.println("command: " + splittedCommand[0]);
+            switch (splittedCommand[0]){
+                case "logout":
+                    String resultLogout = logout(splittedCommand[1]);
+                    oos.writeObject(resultLogout);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public synchronized Login<UserAndStatus> login(User u) throws RemoteException {
@@ -43,7 +64,6 @@ public class TCPServer{
         Login<UserAndStatus> login;
 
         if(u.getName().isEmpty() || u.getPassword().isEmpty()){
-            System.err.println("Il nome utente e la password non possono essere vuoti");
             result = "Nome utente o password vuoti";
         }
 
@@ -61,14 +81,14 @@ public class TCPServer{
                 if(u.getPassword().equals(currUser.getPassword())){
                     if(u.getStatus().equals("offline")){
                         tmp = true;
-                        u.setStatus("online");
-                        register.update(u.getName(),"online");
+                        currUser.setStatus("online");
+                        register.update(currUser.getName(),"online");
                     }
                     else result = "Utente già loggato";
 
                 }else result = "password errata";
 
-            System.out.println("sono qui te sei qua loro sono la e questo progetto non mi riesce tralala");
+            System.out.println("io sono qui te sei qua loro sono la e questo progetto non mi riesce tralala");
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
         }
 
@@ -84,5 +104,34 @@ public class TCPServer{
         }
 
         return login;
+    }
+
+    @Override
+    public String logout(String nickName) throws RemoteException {
+
+        if(nickName.isEmpty()){
+            return  "Nome utente vuoto";
+        }
+
+
+        ArrayList<User> data = new ArrayList<>();
+        userList.getList().forEach((s, user) -> {
+            synchronized (user){
+                data.add(user);
+            }
+        });
+
+        if(data.isEmpty()) return "Nessun utente registrato";
+        for(User currUser: data){
+            System.out.println("curruser: " + currUser.getName() + " stato: " + currUser.getStatus());
+            if(currUser.getName().equals(nickName))
+                if(currUser.getStatus().equals("online")){
+                    register.update(nickName,"offline");
+                    currUser.setStatus("offline");
+                    return "OK";
+                }else return "l'utente non è online";
+        }
+
+        return "L'utente non è registrato nel sistema";
     }
 }
