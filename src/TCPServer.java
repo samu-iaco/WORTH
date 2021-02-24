@@ -81,14 +81,14 @@ public class TCPServer implements ServerInterface{
                 if(u.getPassword().equals(currUser.getPassword())){
                     if(u.getStatus().equals("offline")){
                         tmp = true;
-                        u.setStatus("online");
-                        register.update(u.getName(),"online");
+                        currUser.setStatus("online");
+                        register.update(currUser.getName(),"online");
                     }
                     else result = "Utente già loggato";
 
                 }else result = "password errata";
 
-            System.out.println("sono qui te sei qua loro sono la e questo progetto non mi riesce tralala");
+            System.out.println("io sono qui te sei qua loro sono la e questo progetto non mi riesce tralala");
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
         }
 
@@ -108,10 +108,9 @@ public class TCPServer implements ServerInterface{
 
     @Override
     public String logout(String nickName) throws RemoteException {
-        String result = null;
 
         if(nickName.isEmpty()){
-            result = "Nome utente o password vuoti";
+            return  "Nome utente vuoto";
         }
 
 
@@ -122,16 +121,17 @@ public class TCPServer implements ServerInterface{
             }
         });
 
-        if(data.isEmpty()) result = "Nessun utente registrato";
+        if(data.isEmpty()) return "Nessun utente registrato";
         for(User currUser: data){
+            System.out.println("curruser: " + currUser.getName() + " stato: " + currUser.getStatus());
             if(currUser.getName().equals(nickName))
                 if(currUser.getStatus().equals("online")){
                     register.update(nickName,"offline");
                     currUser.setStatus("offline");
-                }else result = "l'utente non è online";
-            else result = "L'utente non è registrato nel sistema";
+                    return "OK";
+                }else return "l'utente non è online";
         }
-        result = "OK";
-        return result;
+
+        return "L'utente non è registrato nel sistema";
     }
 }
