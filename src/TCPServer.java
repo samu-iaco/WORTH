@@ -1,3 +1,5 @@
+
+import Model.User;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;

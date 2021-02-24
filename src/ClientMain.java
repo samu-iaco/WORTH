@@ -1,4 +1,5 @@
 import Remote.Exception.UserAlreadyExistsException;
+import Model.User;
 
 import java.io.DataInputStream;
 import java.io.IOException;
