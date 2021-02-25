@@ -1,4 +1,5 @@
 
+import Model.Project;
 import Model.User;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -20,9 +21,13 @@ public class TCPServer implements ServerInterface{
     RMI_register_Class register;
     Login<UserAndStatus> resultLogin;
 
+    private ArrayList<Project> projects;
+    private String currUsername;
+
 
     public TCPServer(SignedUpUsers userList) throws IOException, ClassNotFoundException {
         serverSocket = new ServerSocket(PORT_TCP);
+        projects = new ArrayList<>();
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
         while(true){
@@ -36,6 +41,7 @@ public class TCPServer implements ServerInterface{
             oos = new ObjectOutputStream(sock.getOutputStream());
             // Ottengo le informazioni di login dal socket
             User clientUser = (User) ois.readObject();
+            this.currUsername = clientUser.getName();
             register = new RMI_register_Class(userList);
             resultLogin = login(clientUser);
             oos.writeObject(resultLogin);
@@ -64,6 +70,11 @@ public class TCPServer implements ServerInterface{
                     listOnlineUsers = listOnlineusers();
                     oos.writeObject(listOnlineUsers);
                     break;
+                case "createproject":
+                    String resultCreateProject = createProject(splittedCommand[1],currUsername);
+                    oos.writeObject(resultCreateProject);
+                    break;
+
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -180,5 +191,34 @@ public class TCPServer implements ServerInterface{
         }
 
         return list;
+    }
+
+
+    @Override
+    public ArrayList<Project> listProjects() {
+        ArrayList<Project> list = new ArrayList<>();
+
+
+        return null;
+    }
+
+    @Override
+    public String createProject(String projectName, String username) {
+        if(projectName.isEmpty()) {
+            System.err.println("Il nome del progetto non puo essere vuoto");
+            return "Nome progetto vuoto";
+        }
+
+        for(Project currProject: projects){
+            if(currProject.getName().equals(projectName)){
+                System.err.println("Il progetto " + projectName + " esiste gia");
+                return "Progetto gia esistente";
+            }
+        }
+
+        Project project = new Project(projectName,username);
+        System.out.println("mo succede er botto");
+
+        return "OK";
     }
 }

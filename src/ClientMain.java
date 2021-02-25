@@ -104,6 +104,13 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         listonlineusers(splittedCommand);
                         break;
+                    case "createproject":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        createProject(splittedCommand);
+                        break;
                 }
             }
         } catch (IOException | NotBoundException | UserAlreadyExistsException | ClassNotFoundException e) {
@@ -170,6 +177,17 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         for(UserAndStatus currUser: list){
             System.out.println(currUser);
         }
+    }
+
+    public void createProject(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+
+        String result = (String) ois.readObject();
+
+        if(result.equals("OK")){
+            System.out.println("Progetto: " + splittedCommand[1] + " creato");
+        }else
+            System.err.println(result);
     }
 
     @Override
