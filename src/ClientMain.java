@@ -1,5 +1,7 @@
+import Model.Project;
 import Remote.Exception.UserAlreadyExistsException;
 import Model.User;
+import com.google.gson.Gson;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -104,6 +106,14 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         listonlineusers(splittedCommand);
                         break;
+                    case "listprojects":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        listProjects(splittedCommand);
+                        break;
+
                     case "createproject":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
@@ -179,6 +189,14 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }
     }
 
+    public void listProjects(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        ArrayList<Project> list= (ArrayList<Project>) ois.readObject();
+        Gson gson = new Gson();
+        String projectsJson = gson.toJson(list);
+        System.out.println(projectsJson);
+    }
+
     public void createProject(String[] splittedCommand) throws IOException, ClassNotFoundException {
         oos.writeObject(splittedCommand);
 
@@ -189,6 +207,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }else
             System.err.println(result);
     }
+
+
 
     @Override
     public void notifyEvent(String userName, String status) throws RemoteException {

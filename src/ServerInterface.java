@@ -26,9 +26,10 @@ public interface ServerInterface {
     ArrayList<UserAndStatus> listOnlineusers();
 
     /**
+     * @param username nome utente di cui si vuole la lista dei progetti
      * @return la lista dei progetti di cui il client è membro
      */
-    ArrayList<Project> listProjects();
+    ArrayList<Project> listProjects(String username);
 
     /**
      * @param projectName nome del progetto

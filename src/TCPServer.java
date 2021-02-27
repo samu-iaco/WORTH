@@ -1,5 +1,6 @@
 
 import Model.Project;
+import Model.SignedUpProjects;
 import Model.User;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
@@ -18,16 +20,16 @@ public class TCPServer implements ServerInterface{
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
+    SignedUpProjects projectList;
     RMI_register_Class register;
     Login<UserAndStatus> resultLogin;
 
-    private ArrayList<Project> projects;
     private String currUsername;
 
 
-    public TCPServer(SignedUpUsers userList) throws IOException, ClassNotFoundException {
+    public TCPServer(SignedUpUsers userList, SignedUpProjects projectList) throws IOException, ClassNotFoundException {
         serverSocket = new ServerSocket(PORT_TCP);
-        projects = new ArrayList<>();
+        this.projectList = projectList;
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
         while(true){
@@ -69,6 +71,11 @@ public class TCPServer implements ServerInterface{
                     ArrayList<UserAndStatus> listOnlineUsers;
                     listOnlineUsers = listOnlineusers();
                     oos.writeObject(listOnlineUsers);
+                    break;
+                case "listprojects":
+                    ArrayList<Project> userProjects;
+                    userProjects = listProjects(currUsername);
+                    oos.writeObject(userProjects);
                     break;
                 case "createproject":
                     String resultCreateProject = createProject(splittedCommand[1],currUsername);
@@ -195,11 +202,24 @@ public class TCPServer implements ServerInterface{
 
 
     @Override
-    public ArrayList<Project> listProjects() {
+    public ArrayList<Project> listProjects(String username) {
         ArrayList<Project> list = new ArrayList<>();
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        if(data.isEmpty()) return null;
+        for(Project currProject: data){
+            if(currProject.isInProject(username))
+                list.add(currProject);
+        }
+        if(list.isEmpty()) return null; //L'utente non collabora a nessun progetto
+        return list;
 
 
-        return null;
     }
 
     @Override
@@ -209,7 +229,15 @@ public class TCPServer implements ServerInterface{
             return "Nome progetto vuoto";
         }
 
-        for(Project currProject: projects){
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+
+        for(Project currProject: data){
             if(currProject.getName().equals(projectName)){
                 System.err.println("Il progetto " + projectName + " esiste gia");
                 return "Progetto gia esistente";
@@ -217,6 +245,7 @@ public class TCPServer implements ServerInterface{
         }
 
         Project project = new Project(projectName,username);
+        projectList.addProject(project);
         System.out.println("mo succede er botto");
 
         return "OK";

@@ -1,28 +1,32 @@
 package Model;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * classe che gestisce i progetti
  */
-public class Project {
+public class Project implements Serializable {
     private String name;
+    private ArrayList<Card> cards;
     private ArrayList<String> projectMembers;
     private ArrayList<String> TODO;
     private ArrayList<String> INPROGRESS;
     private ArrayList<String> TOBEREVISITED;
     private ArrayList<String> DONE;
-    private File dir;
+    private transient File dir;
 
 
     public Project(String name, String username) {
+        super();
         this.name = name;
         this.TODO = new ArrayList<>();
         this.INPROGRESS = new ArrayList<>();
         this.TOBEREVISITED = new ArrayList<>();
         this.DONE = new ArrayList<>();
         this.projectMembers = new ArrayList<>();
+        this.cards = new ArrayList<Card>();
         projectMembers.add(username);
         dir = new File("./" + name);
         if(!dir.exists()) dir.mkdir();
@@ -83,5 +87,13 @@ public class Project {
 
     public void setDONE(ArrayList<String> DONE) {
         this.DONE = DONE;
+    }
+
+    @Override
+    public String toString() {
+        return "Progetto{ " +
+                "Nome: " + name + '\'' +
+                 + '\'' +
+                '}';
     }
 }
