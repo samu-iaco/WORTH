@@ -1,6 +1,6 @@
 [
   {
-    "name": "ciaos",
+    "name": "bighello",
     "cards": [],
     "projectMembers": [
       "q"
@@ -8,9 +8,6 @@
     "TODO": [],
     "INPROGRESS": [],
     "TOBEREVISITED": [],
-    "DONE": [],
-    "dir": {
-      "path": ".\\ciaos"
-    }
+    "DONE": []
   }
 ]

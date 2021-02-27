@@ -1,6 +1,7 @@
 package Model;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -15,7 +16,7 @@ public class Project implements Serializable {
     private ArrayList<String> INPROGRESS;
     private ArrayList<String> TOBEREVISITED;
     private ArrayList<String> DONE;
-    private transient File dir;
+    private transient File dir; //transient per evitare la serializzazione di gson
 
 
     public Project(String name, String username) {
@@ -39,6 +40,32 @@ public class Project implements Serializable {
             }
         }
         return false;
+    }
+
+    public String addCard(String name, String description){
+        if(name.isEmpty() || description.isEmpty()){
+            return "Nome o descrizione della carta vuoti";
+        }
+
+        for(Card currCard: cards){
+            if(currCard.getName().equals(name)){
+                return ("Card " + currCard.getName() + " gia esistente");
+            }
+            Card card = new Card(description, name);
+            TODO.add(name);
+
+            File file = new File(dir + "/" + name + ".json");
+            try{
+                if(!file.exists()){
+                    file.createNewFile();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        return null;
     }
 
     public String getName() {
