@@ -113,13 +113,19 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         listProjects(splittedCommand);
                         break;
-
                     case "createproject":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
                         createProject(splittedCommand);
+                        break;
+                    case "addmember":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        addmember(splittedCommand);
                         break;
                 }
             }
@@ -208,7 +214,16 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             System.err.println(result);
     }
 
+    public void addmember(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        String result = (String) ois.readObject();
 
+        if(result.equals("OK")){
+            System.out.println("Utente: " + splittedCommand[2] + " correttamente inserito nel progetto "
+            + splittedCommand[1]);
+        }
+        else System.err.println(result);
+    }
 
     @Override
     public void notifyEvent(String userName, String status) throws RemoteException {

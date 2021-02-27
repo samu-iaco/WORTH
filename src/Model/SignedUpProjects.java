@@ -75,7 +75,7 @@ public class SignedUpProjects {
         return projects;
     }
 
-    private synchronized void store(){
+    public synchronized void store(){
         try {
             FileOutputStream fos = new FileOutputStream(file);
 

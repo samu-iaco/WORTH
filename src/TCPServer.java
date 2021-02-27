@@ -81,6 +81,10 @@ public class TCPServer implements ServerInterface{
                     String resultCreateProject = createProject(splittedCommand[1],currUsername);
                     oos.writeObject(resultCreateProject);
                     break;
+                case "addmember":
+                    String resultCreateMember = addMember(splittedCommand[1],splittedCommand[2]);
+                    oos.writeObject(resultCreateMember);
+                    break;
 
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -249,5 +253,42 @@ public class TCPServer implements ServerInterface{
         System.out.println("mo succede er botto");
 
         return "OK";
+    }
+
+    @Override
+    public String addMember(String projectName, String username) {
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        ArrayList<User> dataUser = new ArrayList<>();
+        userList.getList().forEach((s, user) -> {
+            synchronized (user){
+                dataUser.add(user);
+            }
+        });
+        boolean userExist = false;
+        for(User currUser: dataUser){
+            if(currUser.getName().equals(username)){
+                userExist = true;
+            }
+        }
+        if(!userExist) return "L'utente che vuoi aggiungere non esiste";
+
+        for(Project currProject: data){
+            if(currProject.getName().equals(projectName))
+                if(!(currProject.isInProject(username))){
+                    currProject.addMember(username);
+                    projectList.store(); //aggiorno il file
+                    return "OK";
+                }else return "L'utente è gia presente nel progetto";
+            else return "Non esiste un progetto con questo nome";
+        }
+
+        return "Project list vuota";
+
     }
 }

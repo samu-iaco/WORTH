@@ -42,6 +42,10 @@ public class Project implements Serializable {
         return false;
     }
 
+    public boolean addMember(String username){
+        return projectMembers.add(username);
+    }
+
     public String addCard(String name, String description){
         if(name.isEmpty() || description.isEmpty()){
             return "Nome o descrizione della carta vuoti";

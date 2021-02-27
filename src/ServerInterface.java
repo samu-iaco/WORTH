@@ -39,4 +39,12 @@ public interface ServerInterface {
      */
     String createProject(String projectName, String username);
 
+    /**
+     *
+     * @param projectName nome del progetto
+     * @param username nome dell'utente
+     * @return aggiunge al progetto projectName l'utente username
+     */
+    String addMember(String projectName, String username);
+
 }
