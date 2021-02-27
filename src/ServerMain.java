@@ -1,3 +1,5 @@
+import Model.SignedUpProjects;
+
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -10,6 +12,8 @@ public class ServerMain {
      *  Questa classe astrae il file json contenente gli utenti registrati
      */
     private static SignedUpUsers usersList = new SignedUpUsers();
+    //aggiungere una cosa simile ma per i progetti e poi controllare la gestione delle cartelle
+    private static SignedUpProjects projectsList = new SignedUpProjects();
 
     public static void main(String[] args) {
         try{
@@ -20,7 +24,7 @@ public class ServerMain {
             Registry registry = LocateRegistry.createRegistry(PORT_RMI);
             registry.rebind("SignUp" , server);
             //parte TCP
-            new TCPServer(usersList);
+            new TCPServer(usersList,projectsList);
 
 
         } catch (IOException | ClassNotFoundException e) {

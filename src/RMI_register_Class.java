@@ -1,4 +1,5 @@
 import Remote.Exception.UserAlreadyExistsException;
+import Model.User;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

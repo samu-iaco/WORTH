@@ -1,3 +1,5 @@
+import Model.User;
+
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.Proxy;

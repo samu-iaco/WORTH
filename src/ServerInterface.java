@@ -1,3 +1,5 @@
+import Model.Project;
+
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
@@ -22,4 +24,19 @@ public interface ServerInterface {
      *         ed online nel momento in cui il metodo viene chiamato
      */
     ArrayList<UserAndStatus> listOnlineusers();
+
+    /**
+     * @param username nome utente di cui si vuole la lista dei progetti
+     * @return la lista dei progetti di cui il client è membro
+     */
+    ArrayList<Project> listProjects(String username);
+
+    /**
+     * @param projectName nome del progetto
+     * @return Crea un nuovo progetto di nome projectname
+     *         dove ci sarà come primo membro l'utente
+     *         che ha richiesto la creazione
+     */
+    String createProject(String projectName, String username);
+
 }
