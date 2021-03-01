@@ -160,18 +160,25 @@ public class TCPServer implements ServerInterface{
             }
         });
 
-        if(data.isEmpty()) return "Nessun utente registrato";
+        String result = null;
+        boolean finish = false;
+
+        if(data.isEmpty()) result = "Nessun utente registrato";
         for(User currUser: data){
             System.out.println("curruser: " + currUser.getName() + " stato: " + currUser.getStatus());
             if(currUser.getName().equals(nickName))
                 if(currUser.getStatus().equals("online")){
                     register.update(nickName,"offline");
                     currUser.setStatus("offline");
-                    return "OK";
-                }else return "l'utente non è online";
+                    finish = true;
+                    result = "OK";
+                }else result = "l'utente non è online";
         }
-
-        return "L'utente non è registrato nel sistema";
+        if(finish) return result;
+        else{
+            result = "L'utente non è registrato nel sistema";
+            return result;
+        }
     }
 
     @Override
@@ -267,7 +274,7 @@ public class TCPServer implements ServerInterface{
             }
         });
 
-        System.out.println(data);
+        String result = null;
 
         ArrayList<User> dataUser = new ArrayList<>();
         userList.getList().forEach((s, user) -> {
@@ -289,13 +296,13 @@ public class TCPServer implements ServerInterface{
                     if(!(currProject.isInProject(username))){
                         currProject.addMember(username);
                         projectList.store(); //aggiorno il file
-                        return "OK";
-                    }else return "L'utente è gia presente nel progetto";
-                }else return "L'utente non è un membro del progetto";
-            else return "Non esiste un progetto con questo nome";
+                        result = "OK";
+                    }else result = "L'utente è gia presente nel progetto";
+                }else result = "L'utente non è un membro del progetto";
+            else result = "Non esiste un progetto con questo nome";
         }
 
-        return "Project list vuota";
+        return result;
 
     }
 
