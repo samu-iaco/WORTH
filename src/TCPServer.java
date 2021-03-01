@@ -85,6 +85,10 @@ public class TCPServer implements ServerInterface{
                     String resultCreateMember = addMember(splittedCommand[1],splittedCommand[2]);
                     oos.writeObject(resultCreateMember);
                     break;
+                case "showmembers":
+                    ToClient<String> resultShowMembers = showMembers(splittedCommand[1]);
+                    oos.writeObject(resultShowMembers);
+                    break;
 
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -250,7 +254,6 @@ public class TCPServer implements ServerInterface{
 
         Project project = new Project(projectName,username);
         projectList.addProject(project);
-        System.out.println("mo succede er botto");
 
         return "OK";
     }
@@ -263,6 +266,8 @@ public class TCPServer implements ServerInterface{
                 data.add(Project);
             }
         });
+
+        System.out.println(data);
 
         ArrayList<User> dataUser = new ArrayList<>();
         userList.getList().forEach((s, user) -> {
@@ -280,15 +285,41 @@ public class TCPServer implements ServerInterface{
 
         for(Project currProject: data){
             if(currProject.getName().equals(projectName))
-                if(!(currProject.isInProject(username))){
-                    currProject.addMember(username);
-                    projectList.store(); //aggiorno il file
-                    return "OK";
-                }else return "L'utente è gia presente nel progetto";
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    if(!(currProject.isInProject(username))){
+                        currProject.addMember(username);
+                        projectList.store(); //aggiorno il file
+                        return "OK";
+                    }else return "L'utente è gia presente nel progetto";
+                }else return "L'utente non è un membro del progetto";
             else return "Non esiste un progetto con questo nome";
         }
 
         return "Project list vuota";
 
+    }
+
+    @Override
+    public ToClient<String> showMembers(String projectName) {
+        ArrayList<String> list = null;
+        String result = null;
+
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        for(Project currProject: data){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    list = currProject.getProjectMembers();
+                    result = "OK";
+                }else result = "L'utente non è un membro del progetto";
+            else result = "Non esiste un progetto con questo nome";
+        }
+
+        return new ToClient<>(result,list);
     }
 }

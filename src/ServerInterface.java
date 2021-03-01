@@ -47,4 +47,10 @@ public interface ServerInterface {
      */
     String addMember(String projectName, String username);
 
+    /**
+     * @param projectName nome del progetto di cui si vuole conoscere i membri
+     * @return la lista dei membri del progetto
+     */
+    ToClient<String> showMembers(String projectName);
+
 }

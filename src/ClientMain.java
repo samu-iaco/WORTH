@@ -127,6 +127,13 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         addmember(splittedCommand);
                         break;
+                    case "showmembers":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        showmembers(splittedCommand);
+                        break;
                 }
             }
         } catch (IOException | NotBoundException | UserAlreadyExistsException | ClassNotFoundException e) {
@@ -223,6 +230,19 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             + splittedCommand[1]);
         }
         else System.err.println(result);
+    }
+
+    public void showmembers(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        ToClient<String> result = (ToClient<String>) ois.readObject();
+        if(result.getMessage().equals("OK")){
+            Gson gson = new Gson();
+            System.out.print("Utenti: ");
+            String membersGson = gson.toJson(result.getList());
+            System.out.println(membersGson);
+
+        }else System.err.println(result.getMessage());
+
     }
 
     @Override
