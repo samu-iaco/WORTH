@@ -27,7 +27,7 @@ public class Project implements Serializable {
         this.TOBEREVISITED = new ArrayList<>();
         this.DONE = new ArrayList<>();
         this.projectMembers = new ArrayList<>();
-        this.cards = new ArrayList<Card>();
+        this.cards = new ArrayList<>();
         projectMembers.add(username);
         dir = new File("./" + name);
         if(!dir.exists()) dir.mkdir();
@@ -46,30 +46,33 @@ public class Project implements Serializable {
         return projectMembers.add(username);
     }
 
-    public String addCard(String name, String description){
+    public String addCard(String cardName, String description){
         if(name.isEmpty() || description.isEmpty()){
             return "Nome o descrizione della carta vuoti";
         }
-
-        for(Card currCard: cards){
-            if(currCard.getName().equals(name)){
+        System.out.println("cards size: " + cards.size());
+        for(Card currCard: cards) {
+            System.out.println("ciao");
+            if (currCard.getName().equals(name)) {
                 return ("Card " + currCard.getName() + " gia esistente");
             }
-            Card card = new Card(description, name);
-            TODO.add(name);
-
-            File file = new File(dir + "/" + name + ".json");
-            try{
-                if(!file.exists()){
-                    file.createNewFile();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
 
-        return null;
+        Card card = new Card(description, cardName);
+        cards.add(card);
+        TODO.add(name);
+        System.out.println("ciao");
+        File file = new File(dir+cardName);
+        try{
+            if(!file.exists()){
+                file.createNewFile();
+                System.out.println("ciao nel nuovo file");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return "OK";
     }
 
     public String getName() {
@@ -118,6 +121,14 @@ public class Project implements Serializable {
 
     public void setDONE(ArrayList<String> DONE) {
         this.DONE = DONE;
+    }
+
+    public ArrayList<Card> getCards() {
+        return cards;
+    }
+
+    public void setCards(ArrayList<Card> cards) {
+        this.cards = cards;
     }
 
     @Override

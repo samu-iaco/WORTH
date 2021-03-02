@@ -1,4 +1,5 @@
 
+import Model.Card;
 import Model.Project;
 import Model.SignedUpProjects;
 import Model.User;
@@ -89,7 +90,14 @@ public class TCPServer implements ServerInterface{
                     ToClient<String> resultShowMembers = showMembers(splittedCommand[1]);
                     oos.writeObject(resultShowMembers);
                     break;
-
+                case "showcards":
+                    ToClient<Card> resultShowCards = showCards(splittedCommand[1]);
+                    oos.writeObject(resultShowCards);
+                    break;
+                case "addcard":
+                    String resultAddCard = addCard(splittedCommand[1],splittedCommand[2],splittedCommand[3]);
+                    oos.writeObject(resultAddCard);
+                    break;
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -329,4 +337,52 @@ public class TCPServer implements ServerInterface{
 
         return new ToClient<>(result,list);
     }
+
+    @Override
+    public ToClient<Card> showCards(String projectName) {
+        String result = null;
+        ArrayList<Card> list = null;
+
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        for(Project currProject: data){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    list = currProject.getCards();
+                    result = "OK";
+                }else result = "L'utente non è un membro del progetto";
+            else result = "Non esiste un progetto con questo nome";
+        }
+
+        return new ToClient<>(result, list);
+    }
+
+    @Override
+    public String addCard(String projectName, String cardName, String description) {
+        String result = null;
+
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        for(Project currProject: data){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    result = currProject.addCard(cardName,description);
+                }else result = "L'utente non è un membro del progetto";
+            else result = "non esiste un progetto con questo nome";
+        }
+
+        return result;
+    }
+
+
 }
