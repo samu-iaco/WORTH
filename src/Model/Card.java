@@ -18,7 +18,8 @@ public class Card implements Serializable {
     }
 
     public void changeList(String arrivo){
-        
+        this.cardHistory.add(arrivo);
+
     }
 
     public String getDescription() {
