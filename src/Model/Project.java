@@ -29,7 +29,7 @@ public class Project implements Serializable {
         this.projectMembers = new ArrayList<>();
         this.cards = new ArrayList<>();
         projectMembers.add(username);
-        dir = new File("./" + name);
+        this.dir = new File("./" + name);
         if(!dir.exists()) dir.mkdir();
     }
 
@@ -53,16 +53,15 @@ public class Project implements Serializable {
         System.out.println("cards size: " + cards.size());
         for(Card currCard: cards) {
             System.out.println("ciao");
-            if (currCard.getName().equals(name)) {
+            if (currCard.getName().equals(cardName)) {
                 return ("Card " + currCard.getName() + " gia esistente");
             }
         }
 
         Card card = new Card(description, cardName);
         cards.add(card);
-        TODO.add(name);
-        System.out.println("ciao");
-        File file = new File(dir+cardName);
+        TODO.add(cardName);
+        File file = new File(name + "/" +cardName+".json");
         try{
             if(!file.exists()){
                 file.createNewFile();
@@ -73,6 +72,25 @@ public class Project implements Serializable {
         }
 
         return "OK";
+    }
+
+    public String moveCard(String cardName, String partenza, String arrivo){
+        if(partenza.equals(arrivo)) return "La lista di partenza e arrivo coincidono";
+        if(!partenza.equalsIgnoreCase("TODO") && !partenza.equalsIgnoreCase("TOBEREVISITED")
+                && !partenza.equalsIgnoreCase("INPROGRESS") && !partenza.equalsIgnoreCase("DONE"))
+            return "Lista di partenza non valida";
+
+
+        for(Card currCard: cards){
+            //Caso in cui la card si trova in TODO
+            if(partenza.equalsIgnoreCase("TODO")){
+                if(arrivo.equalsIgnoreCase("INPROGRESS")){
+                    TODO.remove(currCard.getName());
+                    INPROGRESS.add(currCard.getName());
+
+                }
+            }
+        }
     }
 
     public String getName() {

@@ -1,12 +1,18 @@
-
+[
   {
     "name": "bighello",
-    "cards": [],
-    "projectMembers": [
-      "q",
-      "samuele"
+    "cards": [
+      {
+        "description": "fwfw",
+        "name": "tasks"
+      }
     ],
-    "TODO": [],
+    "projectMembers": [
+      "q"
+    ],
+    "TODO": [
+      "tasks"
+    ],
     "INPROGRESS": [],
     "TOBEREVISITED": [],
     "DONE": []

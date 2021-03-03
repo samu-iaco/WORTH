@@ -377,6 +377,7 @@ public class TCPServer implements ServerInterface{
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
                     result = currProject.addCard(cardName,description);
+                    projectList.store();
                 }else result = "L'utente non è un membro del progetto";
             else result = "non esiste un progetto con questo nome";
         }
