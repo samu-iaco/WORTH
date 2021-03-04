@@ -151,6 +151,20 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         addCard(splittedCommand);
                         break;
+                    case "movecard":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        movecard(splittedCommand);
+                        break;
+                    case "getcardhistory":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        getCardHistory(splittedCommand);
+                        break;
                 }
 
             }
@@ -280,6 +294,26 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         if(result.equals("OK")){
             System.out.println("card: " + splittedCommand[2] + " aggiunta a: " + splittedCommand[1]);
         }else System.err.println(result);
+    }
+
+    public void movecard(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        String result = (String) ois.readObject();
+        if(result.equals("OK")){
+            System.out.println("card: " + splittedCommand[2] + " spostata a: " + splittedCommand[4]);
+        }else System.err.println(result);
+    }
+
+    public void getCardHistory(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        ToClient<String> result = (ToClient<String>) ois.readObject();
+        if(result.getMessage().equals("OK")){
+            Gson gson = new Gson();
+            System.out.print("Card history: ");
+            String historyGson = gson.toJson(result.getList());
+            System.out.println(historyGson);
+
+        }else System.err.println(result.getMessage());
     }
 
     @Override

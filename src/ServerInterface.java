@@ -68,4 +68,20 @@ public interface ServerInterface {
      */
     String addCard(String projectName, String cardName, String description);
 
+    /**
+     * @param projectName nome del progetto
+     * @param cardName Nome della card
+     * @param partenza lista dove si trova la card
+     * @param arrivo lista dove la card deve andare
+     * @return sposta la card dalla lista di partenza a quella di arrivo
+     */
+    String moveCard(String projectName, String cardName, String partenza, String arrivo);
+
+    /**
+     * @param projectName nome del progetto
+     * @param cardName nome della card
+     * @return gli spostamenti della card all'interno del progeto
+     */
+    ToClient<String> getCardHistory(String projectName, String cardName);
+
 }

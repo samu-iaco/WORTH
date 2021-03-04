@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 public class Card implements Serializable {
 
+    private Card card;
     private String description;
     private String name;
     private ArrayList<String> cardHistory;
@@ -17,9 +18,15 @@ public class Card implements Serializable {
         this.cardHistory.add("TODO");
     }
 
-    public void changeList(String arrivo){
-        this.cardHistory.add(arrivo);
+    public Card(Card card){
+        super();
+        this.card = card;
+        this.cardHistory = new ArrayList<>();
+        this.cardHistory.add("TODO");
+    }
 
+    public void updateHistory(String arrivo){
+        cardHistory.add(arrivo);
     }
 
     public String getDescription() {

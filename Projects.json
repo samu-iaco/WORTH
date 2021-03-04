@@ -10,11 +10,11 @@
     "projectMembers": [
       "q"
     ],
-    "TODO": [
+    "TODO": [],
+    "INPROGRESS": [],
+    "TOBEREVISITED": [
       "tasks"
     ],
-    "INPROGRESS": [],
-    "TOBEREVISITED": [],
     "DONE": []
   }
 ]

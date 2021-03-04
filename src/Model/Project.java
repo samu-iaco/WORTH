@@ -52,7 +52,6 @@ public class Project implements Serializable {
         }
         System.out.println("cards size: " + cards.size());
         for(Card currCard: cards) {
-            System.out.println("ciao");
             if (currCard.getName().equals(cardName)) {
                 return ("Card " + currCard.getName() + " gia esistente");
             }
@@ -82,42 +81,56 @@ public class Project implements Serializable {
 
 
         for(Card currCard: cards){
-            //Caso in cui la card si trova in TODO
-            if(partenza.equalsIgnoreCase("TODO")){
-                if(arrivo.equalsIgnoreCase("INPROGRESS")){
-                    TODO.remove(currCard.getName());
-                    INPROGRESS.add(currCard.getName());
-                    currCard.changeList(arrivo);
-                }else return ("Non si può muovere una card da " + partenza + " ad " + arrivo);
-            }
-
-            //caso in cui la cardi si trova in INPROGRESS
-            if(partenza.equalsIgnoreCase("INPROGRESS")){
-                if(arrivo.equalsIgnoreCase("TOBEREVISITED")){
-                    INPROGRESS.remove(currCard.getName());
-                    TOBEREVISITED.add(currCard.getName());
-                    currCard.changeList(arrivo);
-                } else if(arrivo.equalsIgnoreCase("DONE")){
-                    INPROGRESS.remove(currCard.getName());
-                    DONE.add(currCard.getName());
-                    currCard.changeList(arrivo);
-                }else return "Non è stato possibile muovere la card";
-            }
-
-            //caso in cui la card si trova in TOBEREVISITED
-            if(partenza.equalsIgnoreCase("TOBEREVISITED")){
-                if(arrivo.equalsIgnoreCase("INPROGRESS")){
-                    TOBEREVISITED.remove(currCard.getName());
-                    INPROGRESS.add(currCard.getName());
-                    currCard.changeList(arrivo);
+            if(currCard.getName().equals(cardName)){
+                //Caso in cui la card si trova in TODO
+                Card card = new Card(currCard);
+                if(partenza.equalsIgnoreCase("TODO")){
+                    if(arrivo.equalsIgnoreCase("INPROGRESS")){
+                        card.updateHistory(arrivo); //provare ad inserire history dentro al progetto
+                        TODO.remove(currCard.getName());
+                        INPROGRESS.add(currCard.getName());
+                    }else return ("Non si può muovere una card da " + partenza + " ad " + arrivo);
                 }
-                if(arrivo.equalsIgnoreCase("DONE")){
-                    TOBEREVISITED.remove(currCard.getName());
-                    DONE.add(currCard.getName());
-                    currCard.changeList(arrivo);
+
+                //caso in cui la cardi si trova in INPROGRESS
+                if(partenza.equalsIgnoreCase("INPROGRESS")){
+                    if(arrivo.equalsIgnoreCase("TOBEREVISITED")){
+                        INPROGRESS.remove(currCard.getName());
+                        TOBEREVISITED.add(currCard.getName());
+                        card.updateHistory(arrivo);
+                    } else if(arrivo.equalsIgnoreCase("DONE")){
+                        INPROGRESS.remove(currCard.getName());
+                        DONE.add(currCard.getName());
+                        card.updateHistory(arrivo);
+                    }else return "Non è stato possibile muovere la card";
+                }
+
+                //caso in cui la card si trova in TOBEREVISITED
+                if(partenza.equalsIgnoreCase("TOBEREVISITED")){
+                    if(arrivo.equalsIgnoreCase("INPROGRESS")){
+                        TOBEREVISITED.remove(currCard.getName());
+                        INPROGRESS.add(currCard.getName());
+                        card.updateHistory(arrivo);
+                    }else if(arrivo.equalsIgnoreCase("DONE")){
+                        TOBEREVISITED.remove(currCard.getName());
+                        DONE.add(currCard.getName());
+                        card.updateHistory(arrivo);
+                    }else return "Non è stato possibile muovere la card";
                 }
             }
         }
+        return "OK";
+    }
+
+    public ArrayList<String> cardHistory(String cardName){
+        ArrayList<String> list = null;
+        for(Card currCard: cards){
+            if(currCard.getName().equals(cardName)){
+                System.out.println("history size: " + currCard.getCardHistory().size());
+                list = currCard.getCardHistory();
+            }
+        }
+        return list;
     }
 
     public String getName() {
