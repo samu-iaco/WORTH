@@ -83,39 +83,52 @@ public class Project implements Serializable {
         for(Card currCard: cards){
             if(currCard.getName().equals(cardName)){
                 //Caso in cui la card si trova in TODO
-                Card card = new Card(currCard);
                 if(partenza.equalsIgnoreCase("TODO")){
-                    if(arrivo.equalsIgnoreCase("INPROGRESS")){
-                        card.updateHistory(arrivo); //provare ad inserire history dentro al progetto
-                        TODO.remove(currCard.getName());
-                        INPROGRESS.add(currCard.getName());
-                    }else return ("Non si può muovere una card da " + partenza + " ad " + arrivo);
+                    System.out.println("TODO size: " + TODO.size());
+                    if(TODO.contains(currCard.getName())){
+                        if(arrivo.equalsIgnoreCase("INPROGRESS")){
+                            currCard.updateHistory(arrivo);
+                            TODO.remove(currCard.getName());
+                            INPROGRESS.add(currCard.getName());
+                        }else return ("Non si può muovere una card da " + partenza + " ad " + arrivo);
+                    }else return "La card non si trova in questa lista";
+
                 }
 
-                //caso in cui la cardi si trova in INPROGRESS
+                //caso in cui la card si trova in INPROGRESS
                 if(partenza.equalsIgnoreCase("INPROGRESS")){
-                    if(arrivo.equalsIgnoreCase("TOBEREVISITED")){
-                        INPROGRESS.remove(currCard.getName());
-                        TOBEREVISITED.add(currCard.getName());
-                        card.updateHistory(arrivo);
-                    } else if(arrivo.equalsIgnoreCase("DONE")){
-                        INPROGRESS.remove(currCard.getName());
-                        DONE.add(currCard.getName());
-                        card.updateHistory(arrivo);
-                    }else return "Non è stato possibile muovere la card";
+                    if(INPROGRESS.contains(currCard.getName())){
+                        if(arrivo.equalsIgnoreCase("TOBEREVISITED")){
+                            INPROGRESS.remove(currCard.getName());
+                            TOBEREVISITED.add(currCard.getName());
+                            currCard.updateHistory(arrivo);
+                        } else if(arrivo.equalsIgnoreCase("DONE")){
+                            INPROGRESS.remove(currCard.getName());
+                            DONE.add(currCard.getName());
+                            currCard.updateHistory(arrivo);
+                        }else return "Non è stato possibile muovere la card";
+                    }else return "La card non si trova in questa lista";
+
                 }
 
                 //caso in cui la card si trova in TOBEREVISITED
                 if(partenza.equalsIgnoreCase("TOBEREVISITED")){
-                    if(arrivo.equalsIgnoreCase("INPROGRESS")){
-                        TOBEREVISITED.remove(currCard.getName());
-                        INPROGRESS.add(currCard.getName());
-                        card.updateHistory(arrivo);
-                    }else if(arrivo.equalsIgnoreCase("DONE")){
-                        TOBEREVISITED.remove(currCard.getName());
-                        DONE.add(currCard.getName());
-                        card.updateHistory(arrivo);
-                    }else return "Non è stato possibile muovere la card";
+                    if(TOBEREVISITED.contains(currCard.getName())){
+                        if(arrivo.equalsIgnoreCase("INPROGRESS")){
+                            TOBEREVISITED.remove(currCard.getName());
+                            INPROGRESS.add(currCard.getName());
+                            currCard.updateHistory(arrivo);
+                        }else if(arrivo.equalsIgnoreCase("DONE")){
+                            TOBEREVISITED.remove(currCard.getName());
+                            DONE.add(currCard.getName());
+                            currCard.updateHistory(arrivo);
+                        }else return "Non è stato possibile muovere la card";
+                    }else return "La card non si trova in questa lista";
+                }
+
+                //caso in cui la card si trova in DONE
+                if(partenza.equalsIgnoreCase("DONE")){
+                    return "La card è finita e non si può spostare";
                 }
             }
         }

@@ -18,12 +18,6 @@ public class Card implements Serializable {
         this.cardHistory.add("TODO");
     }
 
-    public Card(Card card){
-        super();
-        this.card = card;
-        this.cardHistory = new ArrayList<>();
-        this.cardHistory.add("TODO");
-    }
 
     public void updateHistory(String arrivo){
         cardHistory.add(arrivo);
