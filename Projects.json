@@ -1,14 +1,29 @@
 [
   {
     "name": "bighello",
-    "cards": [],
+    "cards": [
+      {
+        "description": "dfg",
+        "name": "tasks",
+        "cardHistory": [
+          "TODO",
+          "inprogress",
+          "toberevisited",
+          "inprogress",
+          "done",
+          "done"
+        ]
+      }
+    ],
     "projectMembers": [
-      "q",
-      "samuele"
+      "q"
     ],
     "TODO": [],
     "INPROGRESS": [],
     "TOBEREVISITED": [],
-    "DONE": []
+    "DONE": [
+      "tasks",
+      "tasks"
+    ]
   }
 ]

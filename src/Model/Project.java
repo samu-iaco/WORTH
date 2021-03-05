@@ -27,9 +27,9 @@ public class Project implements Serializable {
         this.TOBEREVISITED = new ArrayList<>();
         this.DONE = new ArrayList<>();
         this.projectMembers = new ArrayList<>();
-        this.cards = new ArrayList<Card>();
+        this.cards = new ArrayList<>();
         projectMembers.add(username);
-        dir = new File("./" + name);
+        this.dir = new File("./" + name);
         if(!dir.exists()) dir.mkdir();
     }
 
@@ -46,30 +46,104 @@ public class Project implements Serializable {
         return projectMembers.add(username);
     }
 
-    public String addCard(String name, String description){
+    public String addCard(String cardName, String description){
         if(name.isEmpty() || description.isEmpty()){
             return "Nome o descrizione della carta vuoti";
         }
-
-        for(Card currCard: cards){
-            if(currCard.getName().equals(name)){
+        System.out.println("cards size: " + cards.size());
+        for(Card currCard: cards) {
+            if (currCard.getName().equals(cardName)) {
                 return ("Card " + currCard.getName() + " gia esistente");
             }
-            Card card = new Card(description, name);
-            TODO.add(name);
-
-            File file = new File(dir + "/" + name + ".json");
-            try{
-                if(!file.exists()){
-                    file.createNewFile();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
 
-        return null;
+        Card card = new Card(description, cardName);
+        cards.add(card);
+        TODO.add(cardName);
+        File file = new File(name + "/" +cardName+".json");
+        try{
+            if(!file.exists()){
+                file.createNewFile();
+                System.out.println("ciao nel nuovo file");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return "OK";
+    }
+
+    public String moveCard(String cardName, String partenza, String arrivo){
+        if(partenza.equals(arrivo)) return "La lista di partenza e arrivo coincidono";
+        if(!partenza.equalsIgnoreCase("TODO") && !partenza.equalsIgnoreCase("TOBEREVISITED")
+                && !partenza.equalsIgnoreCase("INPROGRESS") && !partenza.equalsIgnoreCase("DONE"))
+            return "Lista di partenza non valida";
+
+
+        for(Card currCard: cards){
+            if(currCard.getName().equals(cardName)){
+                //Caso in cui la card si trova in TODO
+                if(partenza.equalsIgnoreCase("TODO")){
+                    System.out.println("TODO size: " + TODO.size());
+                    if(TODO.contains(currCard.getName())){
+                        if(arrivo.equalsIgnoreCase("INPROGRESS")){
+                            currCard.updateHistory(arrivo);
+                            TODO.remove(currCard.getName());
+                            INPROGRESS.add(currCard.getName());
+                        }else return ("Non si può muovere una card da " + partenza + " ad " + arrivo);
+                    }else return "La card non si trova in questa lista";
+
+                }
+
+                //caso in cui la card si trova in INPROGRESS
+                if(partenza.equalsIgnoreCase("INPROGRESS")){
+                    if(INPROGRESS.contains(currCard.getName())){
+                        if(arrivo.equalsIgnoreCase("TOBEREVISITED")){
+                            INPROGRESS.remove(currCard.getName());
+                            TOBEREVISITED.add(currCard.getName());
+                            currCard.updateHistory(arrivo);
+                        } else if(arrivo.equalsIgnoreCase("DONE")){
+                            INPROGRESS.remove(currCard.getName());
+                            DONE.add(currCard.getName());
+                            currCard.updateHistory(arrivo);
+                        }else return "Non è stato possibile muovere la card";
+                    }else return "La card non si trova in questa lista";
+
+                }
+
+                //caso in cui la card si trova in TOBEREVISITED
+                if(partenza.equalsIgnoreCase("TOBEREVISITED")){
+                    if(TOBEREVISITED.contains(currCard.getName())){
+                        if(arrivo.equalsIgnoreCase("INPROGRESS")){
+                            TOBEREVISITED.remove(currCard.getName());
+                            INPROGRESS.add(currCard.getName());
+                            currCard.updateHistory(arrivo);
+                        }else if(arrivo.equalsIgnoreCase("DONE")){
+                            TOBEREVISITED.remove(currCard.getName());
+                            DONE.add(currCard.getName());
+                            currCard.updateHistory(arrivo);
+                        }else return "Non è stato possibile muovere la card";
+                    }else return "La card non si trova in questa lista";
+                }
+
+                //caso in cui la card si trova in DONE
+                if(partenza.equalsIgnoreCase("DONE")){
+                    return "La card è finita e non si può spostare";
+                }
+            }
+        }
+        return "OK";
+    }
+
+    public ArrayList<String> cardHistory(String cardName){
+        ArrayList<String> list = null;
+        for(Card currCard: cards){
+            if(currCard.getName().equals(cardName)){
+                System.out.println("history size: " + currCard.getCardHistory().size());
+                list = currCard.getCardHistory();
+            }
+        }
+        return list;
     }
 
     public String getName() {
@@ -118,6 +192,14 @@ public class Project implements Serializable {
 
     public void setDONE(ArrayList<String> DONE) {
         this.DONE = DONE;
+    }
+
+    public ArrayList<Card> getCards() {
+        return cards;
+    }
+
+    public void setCards(ArrayList<Card> cards) {
+        this.cards = cards;
     }
 
     @Override

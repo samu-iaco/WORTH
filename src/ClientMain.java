@@ -1,3 +1,4 @@
+import Model.Card;
 import Model.Project;
 import Remote.Exception.UserAlreadyExistsException;
 import Model.User;
@@ -83,6 +84,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         break;
                     case "logout":
+                        System.out.println("ciao");
                         boolean resultLogout = false;
                         if(alreadyLogged)
                             resultLogout = logout(splittedCommand[1],splittedCommand);
@@ -91,6 +93,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                             alreadyLogged = false;
                             System.out.println("Utente: " + splittedCommand[1] + " scollegato");
                         }
+                        ok = false;
                         break;
                     case "listusers":
                         if(!alreadyLogged) {
@@ -134,7 +137,36 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         showmembers(splittedCommand);
                         break;
+                    case "showcards":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        showcards(splittedCommand);
+                        break;
+                    case "addcard":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        addCard(splittedCommand);
+                        break;
+                    case "movecard":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        movecard(splittedCommand);
+                        break;
+                    case "getcardhistory":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        getCardHistory(splittedCommand);
+                        break;
                 }
+
             }
         } catch (IOException | NotBoundException | UserAlreadyExistsException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -242,7 +274,46 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             System.out.println(membersGson);
 
         }else System.err.println(result.getMessage());
+    }
 
+    public void showcards(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        ToClient<Card> result = (ToClient<Card>) ois.readObject();
+
+        if(result.getMessage().equals("OK")){
+            Gson gson = new Gson();
+            System.out.print("Cards: ");
+            String cardsGson = gson.toJson(result.getList());
+            System.out.println(cardsGson);
+        }else System.err.println(result.getMessage());
+    }
+
+    public void addCard(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        String result = (String) ois.readObject();
+        if(result.equals("OK")){
+            System.out.println("card: " + splittedCommand[2] + " aggiunta a: " + splittedCommand[1]);
+        }else System.err.println(result);
+    }
+
+    public void movecard(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        String result = (String) ois.readObject();
+        if(result.equals("OK")){
+            System.out.println("card: " + splittedCommand[2] + " spostata a: " + splittedCommand[4]);
+        }else System.err.println(result);
+    }
+
+    public void getCardHistory(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        ToClient<String> result = (ToClient<String>) ois.readObject();
+        if(result.getMessage().equals("OK")){
+            Gson gson = new Gson();
+            System.out.print("Card history: ");
+            String historyGson = gson.toJson(result.getList());
+            System.out.println(historyGson);
+
+        }else System.err.println(result.getMessage());
     }
 
     @Override

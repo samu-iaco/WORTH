@@ -1,4 +1,5 @@
 
+import Model.Card;
 import Model.Project;
 import Model.SignedUpProjects;
 import Model.User;
@@ -32,6 +33,8 @@ public class TCPServer implements ServerInterface{
         this.projectList = projectList;
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
+        //inserire qui la generazione dell'indirizzo multicast con il relativo file
+        
         while(true){
             // Aspetto una connessione
             Socket sock = serverSocket.accept();
@@ -89,7 +92,22 @@ public class TCPServer implements ServerInterface{
                     ToClient<String> resultShowMembers = showMembers(splittedCommand[1]);
                     oos.writeObject(resultShowMembers);
                     break;
-
+                case "showcards":
+                    ToClient<Card> resultShowCards = showCards(splittedCommand[1]);
+                    oos.writeObject(resultShowCards);
+                    break;
+                case "addcard":
+                    String resultAddCard = addCard(splittedCommand[1],splittedCommand[2],splittedCommand[3]);
+                    oos.writeObject(resultAddCard);
+                    break;
+                case "movecard":
+                    String resultMoveCard = moveCard(splittedCommand[1],splittedCommand[2],splittedCommand[3],splittedCommand[4]);
+                    oos.writeObject(resultMoveCard);
+                    break;
+                case "getcardhistory":
+                    ToClient<String> resultCardHistory = getCardHistory(splittedCommand[1],splittedCommand[2]);
+                    oos.writeObject(resultCardHistory);
+                    break;
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -160,18 +178,25 @@ public class TCPServer implements ServerInterface{
             }
         });
 
-        if(data.isEmpty()) return "Nessun utente registrato";
+        String result = null;
+        boolean finish = false;
+
+        if(data.isEmpty()) result = "Nessun utente registrato";
         for(User currUser: data){
             System.out.println("curruser: " + currUser.getName() + " stato: " + currUser.getStatus());
             if(currUser.getName().equals(nickName))
                 if(currUser.getStatus().equals("online")){
                     register.update(nickName,"offline");
                     currUser.setStatus("offline");
-                    return "OK";
-                }else return "l'utente non è online";
+                    finish = true;
+                    result = "OK";
+                }else result = "l'utente non è online";
         }
-
-        return "L'utente non è registrato nel sistema";
+        if(finish) return result;
+        else{
+            result = "L'utente non è registrato nel sistema";
+            return result;
+        }
     }
 
     @Override
@@ -267,7 +292,7 @@ public class TCPServer implements ServerInterface{
             }
         });
 
-        System.out.println(data);
+        String result = null;
 
         ArrayList<User> dataUser = new ArrayList<>();
         userList.getList().forEach((s, user) -> {
@@ -289,13 +314,13 @@ public class TCPServer implements ServerInterface{
                     if(!(currProject.isInProject(username))){
                         currProject.addMember(username);
                         projectList.store(); //aggiorno il file
-                        return "OK";
-                    }else return "L'utente è gia presente nel progetto";
-                }else return "L'utente non è un membro del progetto";
-            else return "Non esiste un progetto con questo nome";
+                        result = "OK";
+                    }else result = "L'utente è gia presente nel progetto";
+                }else result = "L'utente non è un membro del progetto";
+            else result = "Non esiste un progetto con questo nome";
         }
 
-        return "Project list vuota";
+        return result;
 
     }
 
@@ -318,6 +343,100 @@ public class TCPServer implements ServerInterface{
                     result = "OK";
                 }else result = "L'utente non è un membro del progetto";
             else result = "Non esiste un progetto con questo nome";
+        }
+
+        return new ToClient<>(result,list);
+    }
+
+    @Override
+    public ToClient<Card> showCards(String projectName) {
+        String result = null;
+        ArrayList<Card> list = null;
+
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        for(Project currProject: data){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    list = currProject.getCards();
+                    result = "OK";
+                }else result = "L'utente non è un membro del progetto";
+            else result = "Non esiste un progetto con questo nome";
+        }
+
+        return new ToClient<>(result, list);
+    }
+
+    @Override
+    public String addCard(String projectName, String cardName, String description) {
+        String result = null;
+
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        for(Project currProject: data){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    result = currProject.addCard(cardName,description);
+                    projectList.store();
+                }else result = "L'utente non è un membro del progetto";
+            else result = "non esiste un progetto con questo nome";
+        }
+
+        return result;
+    }
+
+    @Override
+    public String moveCard(String projectName, String cardName, String partenza, String arrivo) {
+        String result = null;
+
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        for(Project currProject: data){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    result = currProject.moveCard(cardName,partenza,arrivo);
+                    projectList.store();
+                }else result = "L'utente non è un membro del progetto";
+            else result = "non esiste un progetto con questo nome";
+        }
+
+        return result;
+    }
+
+    @Override
+    public ToClient<String> getCardHistory(String projectName, String cardName) {
+        ArrayList<String> list = null;
+        String result = null;
+
+        ArrayList<Project> data = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                data.add(Project);
+            }
+        });
+
+        for(Project currProject: data){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    list = currProject.cardHistory(cardName);
+                    result = "OK";
+                }else result = "L'utente non è un membro del progetto";
+            else result = "non esiste un progetto con questo nome";
         }
 
         return new ToClient<>(result,list);

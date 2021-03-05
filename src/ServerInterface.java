@@ -1,3 +1,4 @@
+import Model.Card;
 import Model.Project;
 
 import java.rmi.RemoteException;
@@ -52,5 +53,35 @@ public interface ServerInterface {
      * @return la lista dei membri del progetto
      */
     ToClient<String> showMembers(String projectName);
+
+    /**
+     * @param projectName nome del progetto
+     * @return mostra le cards relative al progetto
+     */
+    ToClient<Card> showCards(String projectName);
+
+    /**
+     * @param projectName nome del progetto
+     * @param cardName nome della card
+     * @param description breve descrizione
+     * @return aggiunge al progetto una nuova card con una breve descrizione
+     */
+    String addCard(String projectName, String cardName, String description);
+
+    /**
+     * @param projectName nome del progetto
+     * @param cardName Nome della card
+     * @param partenza lista dove si trova la card
+     * @param arrivo lista dove la card deve andare
+     * @return sposta la card dalla lista di partenza a quella di arrivo
+     */
+    String moveCard(String projectName, String cardName, String partenza, String arrivo);
+
+    /**
+     * @param projectName nome del progetto
+     * @param cardName nome della card
+     * @return gli spostamenti della card all'interno del progeto
+     */
+    ToClient<String> getCardHistory(String projectName, String cardName);
 
 }
