@@ -1,12 +1,9 @@
 
-import Model.Card;
-import Model.Project;
-import Model.SignedUpProjects;
-import Model.User;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import Model.*;
+import com.google.gson.Gson;
+
+import java.io.*;
+import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
@@ -15,15 +12,19 @@ import java.util.Collections;
 
 public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
+    private String NAME_FILE;
 
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
+    private File multicastFile;
+    private ArrayList<User> dataUsers;
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
     SignedUpProjects projectList;
     RMI_register_Class register;
     Login<UserAndStatus> resultLogin;
+    MulticastGen multicastGen;
 
     private String currUsername;
 
@@ -34,7 +35,16 @@ public class TCPServer implements ServerInterface{
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
         //inserire qui la generazione dell'indirizzo multicast con il relativo file
-        
+
+
+        this.dataUsers = new ArrayList<>();
+        userList.getList().forEach((s, user) -> {
+            synchronized (user){
+                dataUsers.add(user);
+            }
+        });
+
+
         while(true){
             // Aspetto una connessione
             Socket sock = serverSocket.accept();
@@ -276,7 +286,7 @@ public class TCPServer implements ServerInterface{
                 return "Progetto gia esistente";
             }
         }
-
+        String mip =
         Project project = new Project(projectName,username);
         projectList.addProject(project);
 
