@@ -33,6 +33,8 @@ public class TCPServer implements ServerInterface{
         this.projectList = projectList;
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
+        //inserire qui la generazione dell'indirizzo multicast con il relativo file
+        
         while(true){
             // Aspetto una connessione
             Socket sock = serverSocket.accept();
