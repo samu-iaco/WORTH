@@ -10,7 +10,7 @@ import java.util.ArrayList;
  */
 public class Project implements Serializable {
     private String name;
-    private int port;
+    private transient int port;
     private String multicast;
     private ArrayList<Card> cards;
     private ArrayList<String> projectMembers;
@@ -21,7 +21,7 @@ public class Project implements Serializable {
     private transient File dir; //transient per evitare la serializzazione di gson
 
 
-    public Project(String name, String username, int port, String multicast) {
+    public Project(String name, String username) {
         super();
         this.name = name;
         this.TODO = new ArrayList<>();
@@ -30,8 +30,8 @@ public class Project implements Serializable {
         this.DONE = new ArrayList<>();
         this.projectMembers = new ArrayList<>();
         this.cards = new ArrayList<>();
-        this.port = port;
-        this.multicast = multicast;
+        //this.port = port;
+        //this.multicast = multicast;
         projectMembers.add(username);
         this.dir = new File("./" + name);
         if(!dir.exists()) dir.mkdir();
