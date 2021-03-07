@@ -135,15 +135,17 @@ public class TCPServer implements ServerInterface{
         }
 
 
-        ArrayList<User> data = new ArrayList<>();
+        /*ArrayList<User> data = new ArrayList<>();
         userList.getList().forEach((s, user) -> {
             synchronized (user){
                 data.add(user);
             }
         });
+
+         */
         boolean tmp = false;
-        if(data.isEmpty()) result = "Nessun utente registrato";
-        for(User currUser: data){
+        if(dataUsers.isEmpty()) result = "Nessun utente registrato";
+        for(User currUser: dataUsers){
             if(u.getName().equals(currUser.getName()))
                 if(u.getPassword().equals(currUser.getPassword())){
                     if(u.getStatus().equals("offline")){
@@ -286,9 +288,9 @@ public class TCPServer implements ServerInterface{
                 return "Progetto gia esistente";
             }
         }
-        String mip =
-        Project project = new Project(projectName,username);
-        projectList.addProject(project);
+        //String mip =
+        //Project project = new Project(projectName,username);
+        //projectList.addProject(project);
 
         return "OK";
     }
