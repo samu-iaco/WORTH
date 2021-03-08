@@ -21,7 +21,7 @@ public class Project implements Serializable {
     private transient File dir; //transient per evitare la serializzazione di gson
 
 
-    public Project(String name, String username) {
+    public Project(String name, String username, int port, String multicast) {
         super();
         this.name = name;
         this.TODO = new ArrayList<>();
@@ -30,8 +30,8 @@ public class Project implements Serializable {
         this.DONE = new ArrayList<>();
         this.projectMembers = new ArrayList<>();
         this.cards = new ArrayList<>();
-        //this.port = port;
-        //this.multicast = multicast;
+        this.port = port;
+        this.multicast = multicast;
         projectMembers.add(username);
         this.dir = new File("./" + name);
         if(!dir.exists()) dir.mkdir();
@@ -204,6 +204,22 @@ public class Project implements Serializable {
 
     public void setCards(ArrayList<Card> cards) {
         this.cards = cards;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String getMulticast() {
+        return multicast;
+    }
+
+    public void setMulticast(String multicast) {
+        this.multicast = multicast;
     }
 
     @Override

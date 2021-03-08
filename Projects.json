@@ -1,7 +1,7 @@
 [
   {
     "name": "bighello",
-    "port": 0,
+    "multicast": "224.0.0.1",
     "cards": [],
     "projectMembers": [
       "q"

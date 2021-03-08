@@ -3,12 +3,14 @@ import Model.*;
 import com.google.gson.Gson;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
@@ -16,9 +18,10 @@ public class TCPServer implements ServerInterface{
 
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
-    private File multicastFile;
     private ArrayList<User> dataUsers;
     private ArrayList<Project> dataProjects;
+    private ArrayList<infoMultiCastConnection> multicastAddresses;
+    private File addresses;
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
@@ -35,9 +38,9 @@ public class TCPServer implements ServerInterface{
         this.projectList = projectList;
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
-        //inserire qui la generazione dell'indirizzo multicast con il relativo file
-
-
+        this.multicastAddresses = new ArrayList<>();
+        this.NAME_FILE = "MulticastIP.json";
+        File addresses = new File(NAME_FILE);
         this.dataUsers = new ArrayList<>();
         userList.getList().forEach((s, user) -> {
             synchronized (user){
@@ -52,6 +55,34 @@ public class TCPServer implements ServerInterface{
             }
         });
 
+        //creo il file con gli indirizzi multicast
+
+        try{
+            if(addresses.exists()){
+                this.searchFile();
+            }else{
+                if(!addresses.createNewFile()){
+                    System.err.println("Problemi durante la creazione del file degli indirizzi multicast");
+                }
+                this.multicastGen = new MulticastGen(224,0,0,0);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //Per ogni progetto controllo le informazioni per il multicast
+        int projectPort;
+        String mProject;
+        MulticastSocket msServer;
+        for(Project currProject: dataProjects){
+            projectPort = currProject.getPort();
+            mProject = currProject.getMulticast();
+            msServer = new MulticastSocket(projectPort); // creo il multicast socket sulla porta del progetto
+            InetAddress group = InetAddress.getByName(mProject);
+            msServer.joinGroup(group); //aggiungo il server alla porta del server
+            msServer.setSoTimeout(3000);
+            multicastAddresses.add(new infoMultiCastConnection(projectPort,mProject));
+        }
 
         while(true){
             // Aspetto una connessione
@@ -307,8 +338,11 @@ public class TCPServer implements ServerInterface{
                 return "Progetto gia esistente";
             }
         }
-        //String mip =
-        Project project = new Project(projectName,username);
+        Random rand = new Random();
+        int port = rand.nextInt((65535-1024))+1025; //escludo da tutte le 65535 le 1024 porte conosciute
+                                                    //per generare un intero nelle porte disponibili
+        String mip = multicastGen.randomIP();
+        Project project = new Project(projectName,username,port,mip);
         projectList.addProject(project);
 
         return "OK";
@@ -485,5 +519,22 @@ public class TCPServer implements ServerInterface{
         }
 
         return new ToClient<>(result,list);
+    }
+
+
+
+    public void searchFile(){
+        try{
+            //apro il file e lo leggo
+            FileInputStream fis = new FileInputStream(NAME_FILE);
+            InputStreamReader in = new InputStreamReader(fis);
+            MulticastGen[] dataArray = new Gson().fromJson(in,MulticastGen[].class);
+            ArrayList<MulticastGen> data = new ArrayList<>();
+            //Aggiungo i valori dentro il nuovo arraylist
+            Collections.addAll(data,dataArray);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 }

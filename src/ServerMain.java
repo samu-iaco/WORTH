@@ -12,7 +12,7 @@ public class ServerMain {
      *  Questa classe astrae il file json contenente gli utenti registrati
      */
     private static SignedUpUsers usersList = new SignedUpUsers();
-    //aggiungere una cosa simile ma per i progetti e poi controllare la gestione delle cartelle
+
     private static SignedUpProjects projectsList = new SignedUpProjects();
 
     public static void main(String[] args) {
