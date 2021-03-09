@@ -1,6 +1,7 @@
 
 import Model.*;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -9,8 +10,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
@@ -20,8 +23,11 @@ public class TCPServer implements ServerInterface{
     private ObjectOutputStream oos;
     private ArrayList<User> dataUsers;
     private ArrayList<Project> dataProjects;
+    private ArrayList<String> multicastGens;
     private ArrayList<infoMultiCastConnection> multicastAddresses;
     private File addresses;
+    //hashmap in cui salvo le coppie multicastaddress-multicast
+    private final ConcurrentHashMap<String,MulticastGen> address = new ConcurrentHashMap<>();
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
@@ -38,6 +44,7 @@ public class TCPServer implements ServerInterface{
         this.projectList = projectList;
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
+        this.multicastGens = new ArrayList<>();
         this.multicastAddresses = new ArrayList<>();
         this.NAME_FILE = "MulticastIP.json";
         File addresses = new File(NAME_FILE);
@@ -55,21 +62,6 @@ public class TCPServer implements ServerInterface{
             }
         });
 
-        //creo il file con gli indirizzi multicast
-
-        try{
-            if(addresses.exists()){
-                this.searchFile();
-            }else{
-                if(!addresses.createNewFile()){
-                    System.err.println("Problemi durante la creazione del file degli indirizzi multicast");
-                }
-                this.multicastGen = new MulticastGen(224,0,0,0);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         //Per ogni progetto controllo le informazioni per il multicast
         int projectPort;
         String mProject;
@@ -83,6 +75,26 @@ public class TCPServer implements ServerInterface{
             msServer.setSoTimeout(3000);
             multicastAddresses.add(new infoMultiCastConnection(projectPort,mProject));
         }
+
+        //creo il file con gli indirizzi multicast
+        try{
+            if(addresses.exists()){
+                if(!(projectList.getList().isEmpty())) {
+                    searchFile();
+                }
+                else this.multicastGen = new MulticastGen(224,0,0,0);
+            }else{
+                if(!addresses.createNewFile()){
+                    System.err.println("Problemi durante la creazione del file degli indirizzi multicast");
+                }
+                this.multicastGen = new MulticastGen(224,0,0,0);
+                this.storeMulticast();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
 
         while(true){
             // Aspetto una connessione
@@ -341,7 +353,8 @@ public class TCPServer implements ServerInterface{
         Random rand = new Random();
         int port = rand.nextInt((65535-1024))+1025; //escludo da tutte le 65535 le 1024 porte conosciute
                                                     //per generare un intero nelle porte disponibili
-        String mip = multicastGen.randomIP();
+        String mip = this.multicastGen.randomIP();
+        addAddress(this.multicastGen);  //salvo l'indirizzo multicast nel file json
         Project project = new Project(projectName,username,port,mip);
         projectList.addProject(project);
 
@@ -523,18 +536,57 @@ public class TCPServer implements ServerInterface{
 
 
 
-    public void searchFile(){
+    public synchronized void searchFile(){
         try{
             //apro il file e lo leggo
             FileInputStream fis = new FileInputStream(NAME_FILE);
             InputStreamReader in = new InputStreamReader(fis);
             MulticastGen[] dataArray = new Gson().fromJson(in,MulticastGen[].class);
             ArrayList<MulticastGen> data = new ArrayList<>();
-            //Aggiungo i valori dentro il nuovo arraylist
             Collections.addAll(data,dataArray);
-        } catch (FileNotFoundException e) {
+
+            data.forEach(MulticastGen ->{
+                synchronized (MulticastGen){
+                    address.put(MulticastGen.toString(), MulticastGen);
+
+                }
+            });
+            fis.close();
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
+    }
+
+    public Boolean addAddress(MulticastGen multicastGen){
+        if(address.putIfAbsent(multicastGen.toString(),multicastGen) == null){
+            this.storeMulticast(); //aggiungo l'utente e salvo il file
+            return true;
+        }
+        else return false;
+    }
+
+    public synchronized void storeMulticast(){
+        try {
+            FileOutputStream fos = new FileOutputStream(NAME_FILE);
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            ArrayList<MulticastGen> data = new ArrayList<>();
+            address.forEach((s,MulticastGen) ->{
+                synchronized (MulticastGen){
+                    data.add(MulticastGen);
+                }
+            });
+
+            //scrivo sul file
+            String s = gson.toJson(data);
+            byte[] b = s.getBytes();
+            fos.write(b);
+
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,3 +1,4 @@
+import Model.MulticastAddress;
 import Model.SignedUpProjects;
 
 import java.io.IOException;
@@ -14,6 +15,8 @@ public class ServerMain {
     private static SignedUpUsers usersList = new SignedUpUsers();
 
     private static SignedUpProjects projectsList = new SignedUpProjects();
+
+    //private static MulticastAddress multicastList = new MulticastAddress();
 
     public static void main(String[] args) {
         try{

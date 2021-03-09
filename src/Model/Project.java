@@ -10,7 +10,7 @@ import java.util.ArrayList;
  */
 public class Project implements Serializable {
     private String name;
-    private transient int port;
+    private int port;
     private String multicast;
     private ArrayList<Card> cards;
     private ArrayList<String> projectMembers;
