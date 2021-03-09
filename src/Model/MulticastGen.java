@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class MulticastGen implements Serializable {
     private int p1,p2,p3,p4;
+    private String address;
 
     public MulticastGen(int p1, int p2, int p3, int p4) {
         super();

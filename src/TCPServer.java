@@ -9,10 +9,7 @@ import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TCPServer implements ServerInterface{
@@ -23,11 +20,9 @@ public class TCPServer implements ServerInterface{
     private ObjectOutputStream oos;
     private ArrayList<User> dataUsers;
     private ArrayList<Project> dataProjects;
-    private ArrayList<String> multicastGens;
+    private ArrayList<MulticastGen> multicastGens;
     private ArrayList<infoMultiCastConnection> multicastAddresses;
     private File addresses;
-    //hashmap in cui salvo le coppie multicastaddress-multicast
-    private final ConcurrentHashMap<String,MulticastGen> address = new ConcurrentHashMap<>();
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
@@ -80,6 +75,7 @@ public class TCPServer implements ServerInterface{
         try{
             if(addresses.exists()){
                 if(!(projectList.getList().isEmpty())) {
+                    this.multicastGen = new MulticastGen(224,0,0,0);
                     searchFile();
                 }
                 else this.multicastGen = new MulticastGen(224,0,0,0);
@@ -87,8 +83,7 @@ public class TCPServer implements ServerInterface{
                 if(!addresses.createNewFile()){
                     System.err.println("Problemi durante la creazione del file degli indirizzi multicast");
                 }
-                this.multicastGen = new MulticastGen(224,0,0,0);
-                this.storeMulticast();
+                else this.multicastGen = new MulticastGen(224,0,0,0);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -354,7 +349,7 @@ public class TCPServer implements ServerInterface{
         int port = rand.nextInt((65535-1024))+1025; //escludo da tutte le 65535 le 1024 porte conosciute
                                                     //per generare un intero nelle porte disponibili
         String mip = this.multicastGen.randomIP();
-        addAddress(this.multicastGen);  //salvo l'indirizzo multicast nel file json
+        storeMulticast(multicastGen);    //salvo l'indirizzo multicast nel file json
         Project project = new Project(projectName,username,port,mip);
         projectList.addProject(project);
 
@@ -542,15 +537,10 @@ public class TCPServer implements ServerInterface{
             FileInputStream fis = new FileInputStream(NAME_FILE);
             InputStreamReader in = new InputStreamReader(fis);
             MulticastGen[] dataArray = new Gson().fromJson(in,MulticastGen[].class);
-            ArrayList<MulticastGen> data = new ArrayList<>();
-            Collections.addAll(data,dataArray);
-
-            data.forEach(MulticastGen ->{
-                synchronized (MulticastGen){
-                    address.put(MulticastGen.toString(), MulticastGen);
-
-                }
-            });
+            System.out.println(multicastGen.toString());
+            System.out.println("size address: " + dataArray.length);
+            System.out.println(Arrays.toString(dataArray));
+            this.multicastGen = dataArray[0];
             fis.close();
 
         } catch (IOException e) {
@@ -559,28 +549,17 @@ public class TCPServer implements ServerInterface{
 
     }
 
-    public Boolean addAddress(MulticastGen multicastGen){
-        if(address.putIfAbsent(multicastGen.toString(),multicastGen) == null){
-            this.storeMulticast(); //aggiungo l'utente e salvo il file
-            return true;
-        }
-        else return false;
-    }
 
-    public synchronized void storeMulticast(){
+    public synchronized void storeMulticast(MulticastGen mip){
         try {
             FileOutputStream fos = new FileOutputStream(NAME_FILE);
 
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            ArrayList<MulticastGen> data = new ArrayList<>();
-            address.forEach((s,MulticastGen) ->{
-                synchronized (MulticastGen){
-                    data.add(MulticastGen);
-                }
-            });
+            multicastGens.add(mip);
+            System.out.println(multicastGens);
 
             //scrivo sul file
-            String s = gson.toJson(data);
+            String s = gson.toJson(multicastGens);
             byte[] b = s.getBytes();
             fos.write(b);
 
