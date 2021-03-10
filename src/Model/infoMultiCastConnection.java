@@ -1,13 +1,15 @@
 package Model;
 
 import java.io.Serializable;
+import java.net.MulticastSocket;
 
-public class infoMultiCastConnection implements Serializable {
+public class InfoMultiCastConnection {
+    private MulticastSocket multicastsocket;
     private int port;
     private String mAddress;
 
-    public infoMultiCastConnection(int port, String mAddress) {
-        super();
+    public InfoMultiCastConnection(MulticastSocket multicastsocket, int port, String mAddress) {
+        this.multicastsocket = multicastsocket;
         this.port = port;
         this.mAddress = mAddress;
     }
@@ -26,5 +28,13 @@ public class infoMultiCastConnection implements Serializable {
 
     public void setmAddress(String mAddress) {
         this.mAddress = mAddress;
+    }
+
+    public MulticastSocket getMulticastsocket() {
+        return multicastsocket;
+    }
+
+    public void setMulticastsocket(MulticastSocket multicastsocket) {
+        this.multicastsocket = multicastsocket;
     }
 }

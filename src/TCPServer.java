@@ -10,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
@@ -21,8 +20,9 @@ public class TCPServer implements ServerInterface{
     private ArrayList<User> dataUsers;
     private ArrayList<Project> dataProjects;
     private ArrayList<MulticastGen> multicastGens;
-    private ArrayList<infoMultiCastConnection> multicastAddresses;
+    private ArrayList<InfoMultiCastConnection> multicastAddresses;
     private File addresses;
+    private String multicastChat;
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
@@ -62,13 +62,14 @@ public class TCPServer implements ServerInterface{
         String mProject;
         MulticastSocket msServer;
         for(Project currProject: dataProjects){
+            System.out.println("multicast server costruttore");
             projectPort = currProject.getPort();
             mProject = currProject.getMulticast();
             msServer = new MulticastSocket(projectPort); // creo il multicast socket sulla porta del progetto
             InetAddress group = InetAddress.getByName(mProject);
             msServer.joinGroup(group); //aggiungo il server alla porta del server
             msServer.setSoTimeout(3000);
-            multicastAddresses.add(new infoMultiCastConnection(projectPort,mProject));
+            multicastAddresses.add(new InfoMultiCastConnection(msServer,projectPort,mProject));
         }
 
         //creo il file con gli indirizzi multicast
@@ -164,6 +165,10 @@ public class TCPServer implements ServerInterface{
                     ToClient<String> resultCardHistory = getCardHistory(splittedCommand[1],splittedCommand[2]);
                     oos.writeObject(resultCardHistory);
                     break;
+                case "sendchatmsg":
+                    String resultSendMsg = sendChatMsg(splittedCommand[1]);
+                    oos.writeObject(resultSendMsg);
+                    break;
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -203,7 +208,6 @@ public class TCPServer implements ServerInterface{
 
                 }else result = "password errata";
 
-            System.out.println("io sono qui te sei qua loro sono la e questo progetto non mi riesce tralala");
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
         }
 
@@ -328,16 +332,6 @@ public class TCPServer implements ServerInterface{
             return "Nome progetto vuoto";
         }
 
-        /*
-        ArrayList<Project> data = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                data.add(Project);
-            }
-        });
-
-         */
-
 
         for(Project currProject: dataProjects){
             if(currProject.getName().equals(projectName)){
@@ -352,6 +346,18 @@ public class TCPServer implements ServerInterface{
         storeMulticast(multicastGen);    //salvo l'indirizzo multicast nel file json
         Project project = new Project(projectName,username,port,mip);
         projectList.addProject(project);
+
+        MulticastSocket mServer; //aggiungo il server al multicast
+        try {
+            mServer = new MulticastSocket(port);
+            mServer.joinGroup(InetAddress.getByName(mip));
+            mServer.setSoTimeout(3000);
+            multicastAddresses.add(new InfoMultiCastConnection(mServer,port,mip));
+        } catch (IOException e) {
+            e.printStackTrace();
+
+
+        }
 
         return "OK";
     }
@@ -529,7 +535,21 @@ public class TCPServer implements ServerInterface{
         return new ToClient<>(result,list);
     }
 
+    @Override
+    public String sendChatMsg(String projectName) {
+        String result = null;
 
+        for(Project currProject: dataProjects){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    this.multicastChat = currProject.getMulticast();
+                    result = "OK";
+                }else result = "L'utente non è un membro del progetto";
+            else result = "non esiste un progetto con questo nome";
+        }
+
+        return result;
+    }
 
     public synchronized void searchFile(){
         try{
@@ -537,9 +557,6 @@ public class TCPServer implements ServerInterface{
             FileInputStream fis = new FileInputStream(NAME_FILE);
             InputStreamReader in = new InputStreamReader(fis);
             MulticastGen[] dataArray = new Gson().fromJson(in,MulticastGen[].class);
-            System.out.println(multicastGen.toString());
-            System.out.println("size address: " + dataArray.length);
-            System.out.println(Arrays.toString(dataArray));
             this.multicastGen = dataArray[0];
             fis.close();
 
@@ -556,7 +573,6 @@ public class TCPServer implements ServerInterface{
 
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             multicastGens.add(mip);
-            System.out.println(multicastGens);
 
             //scrivo sul file
             String s = gson.toJson(multicastGens);

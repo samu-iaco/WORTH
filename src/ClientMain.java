@@ -1,4 +1,5 @@
 import Model.Card;
+import Model.InfoMultiCastConnection;
 import Model.Project;
 import Remote.Exception.UserAlreadyExistsException;
 import Model.User;
@@ -8,7 +9,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.nio.channels.SocketChannel;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -32,6 +33,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     boolean alreadyLogged = false;
 
     private ArrayList<UserAndStatus> listUsersStatus;
+    private ArrayList<InfoMultiCastConnection> multiCastAddresses;
 
     public static void main(String[] args){
         ClientMain clientMain = new ClientMain();
@@ -40,7 +42,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
     public void start(){
         boolean ok = true;
-
+        this.multiCastAddresses = new ArrayList<>();
         SocketChannel socketChannel;
         try{
             //preparo la connessione RMI
@@ -165,6 +167,12 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         getCardHistory(splittedCommand);
                         break;
+                    case "sendchatmsg":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+
                 }
 
             }
@@ -190,6 +198,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         if(resultLogin.getMessage().equals("OK")){
             System.out.println("Utente: " + splittedCommand[1] + " correttamente loggato");
             listUsersStatus = resultLogin.getList();
+
+
             return true;
         }
         else {
@@ -314,6 +324,39 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             System.out.println(historyGson);
 
         }else System.err.println(result.getMessage());
+    }
+
+    public void sendChatMsg(String[] splittedCommand, Scanner in) throws IOException, ClassNotFoundException {
+        String message;
+        String result;
+        System.out.println("Inserisci il messaggio da inviare: ");
+        message = in.nextLine();
+        byte[] sendBuffer = message.getBytes();
+        result = (String) ois.readObject();
+        if(result.equals("OK")){
+            try (DatagramSocket clientSocket = new DatagramSocket()) {
+                clientSocket.setSoTimeout(2000);
+                DatagramPacket packetToSend;
+
+
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
+        }else System.err.println(result);
+
+    }
+
+    @Override
+    public void notifyEventChat(String mAddress, int port) throws RemoteException {
+        MulticastSocket msClient;
+        try {
+            msClient = new MulticastSocket(port);
+            msClient.joinGroup(InetAddress.getByName(mAddress));
+            msClient.setSoTimeout(3000);
+            multiCastAddresses.add(new InfoMultiCastConnection(msClient, port, mAddress));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -84,4 +84,11 @@ public interface ServerInterface {
      */
     ToClient<String> getCardHistory(String projectName, String cardName);
 
+
+    /**
+     * @param projectName nome del progetto su cui si vuole inviare il messaggio
+     * @return l'utente invia il messaggio sulla chat del progetto projectName
+     */
+    String sendChatMsg(String projectName);
+
 }
