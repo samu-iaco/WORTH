@@ -172,7 +172,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-
+                        sendChatMsg(splittedCommand,in);
+                        break;
                 }
 
             }
@@ -198,6 +199,20 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         if(resultLogin.getMessage().equals("OK")){
             System.out.println("Utente: " + splittedCommand[1] + " correttamente loggato");
             listUsersStatus = resultLogin.getList();
+            if(resultLogin.getMulticast()!=null){
+                for(InfoMultiCastConnection info: resultLogin.getMulticast()){
+                    //aggiungo per ogni utente che logga informazioni sul
+                    MulticastSocket mLogin;
+                    try {
+                        mLogin = new MulticastSocket(info.getPort());
+                        mLogin.joinGroup(InetAddress.getByName(info.getmAddress()));
+                        mLogin.setSoTimeout(2000);
+                        multiCastAddresses.add(new InfoMultiCastConnection(mLogin, info.getPort(), info.getmAddress()));
+                    }catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
 
 
             return true;
@@ -327,22 +342,33 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     }
 
     public void sendChatMsg(String[] splittedCommand, Scanner in) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
         String message;
         String result;
         System.out.println("Inserisci il messaggio da inviare: ");
         message = in.nextLine();
         byte[] sendBuffer = message.getBytes();
         result = (String) ois.readObject();
-        if(result.equals("OK")){
+        System.out.println("result chat client: " + result);
+        System.out.println(result.substring(0,2));  //risposta dal server
+        System.out.println(result.substring(2,11)); //indirizzo multicast
+        if(result.substring(0,2).equals("OK")){
             try (DatagramSocket clientSocket = new DatagramSocket()) {
                 clientSocket.setSoTimeout(2000);
                 DatagramPacket packetToSend;
-
+                for(InfoMultiCastConnection info: multiCastAddresses){
+                    if(info.getmAddress().equals(result.substring(2,11))){
+                        packetToSend = new DatagramPacket(sendBuffer, sendBuffer.length,
+                                                          InetAddress.getByName(info.getmAddress()),info.getPort());
+                        info.getMulticastsocket().send(packetToSend);
+                    }
+                }
 
             } catch (SocketException e) {
                 e.printStackTrace();
             }
         }else System.err.println(result);
+
 
     }
 

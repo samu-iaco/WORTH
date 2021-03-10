@@ -62,7 +62,6 @@ public class TCPServer implements ServerInterface{
         String mProject;
         MulticastSocket msServer;
         for(Project currProject: dataProjects){
-            System.out.println("multicast server costruttore");
             projectPort = currProject.getPort();
             mProject = currProject.getMulticast();
             msServer = new MulticastSocket(projectPort); // creo il multicast socket sulla porta del progetto
@@ -180,20 +179,11 @@ public class TCPServer implements ServerInterface{
         String result = null;
         ArrayList<UserAndStatus> list = new ArrayList<>();
         Login<UserAndStatus> login;
-
+        ArrayList<InfoMultiCastConnection> multicast = new ArrayList<>();
         if(u.getName().isEmpty() || u.getPassword().isEmpty()){
             result = "Nome utente o password vuoti";
         }
 
-
-        /*ArrayList<User> data = new ArrayList<>();
-        userList.getList().forEach((s, user) -> {
-            synchronized (user){
-                data.add(user);
-            }
-        });
-
-         */
         boolean tmp = false;
         if(dataUsers.isEmpty()) result = "Nessun utente registrato";
         for(User currUser: dataUsers){
@@ -203,23 +193,25 @@ public class TCPServer implements ServerInterface{
                         tmp = true;
                         currUser.setStatus("online");
                         register.update(currUser.getName(),"online");
-                    }
-                    else result = "Utente già loggato";
-
+                        for(Project currProject : dataProjects) { //Multicast info of projects that user is member
+                            if (currProject.isInProject(currUsername))
+                                multicast.add(new InfoMultiCastConnection(null, currProject.getPort(), currProject.getMulticast()));
+                        }
+                    }else result = "Utente già loggato";
                 }else result = "password errata";
-
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
         }
+
 
         if(!tmp && result == null){
             result = "Utente non registrato nel sistema";
         }
 
         if(tmp){
-            login = new Login<>("OK", list);
+            login = new Login<>("OK", list,multicast);
         }
         else {
-            login = new Login<>(result,null);
+            login = new Login<>(result,null,multicast);
         }
 
         return login;
@@ -543,7 +535,8 @@ public class TCPServer implements ServerInterface{
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
                     this.multicastChat = currProject.getMulticast();
-                    result = "OK";
+                    result = ("OK"+multicastChat);
+                    System.out.println("result send chat: " + result);
                 }else result = "L'utente non è un membro del progetto";
             else result = "non esiste un progetto con questo nome";
         }
