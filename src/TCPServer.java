@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.rmi.RemoteException;
 import java.util.*;
 
@@ -164,9 +161,17 @@ public class TCPServer implements ServerInterface{
                     ToClient<String> resultCardHistory = getCardHistory(splittedCommand[1],splittedCommand[2]);
                     oos.writeObject(resultCardHistory);
                     break;
+                case "readchat":
+                    String resultReadChat = readChat(splittedCommand[1]);
+                    oos.writeObject(resultReadChat);
+                    break;
                 case "sendchatmsg":
                     String resultSendMsg = sendChatMsg(splittedCommand[1]);
                     oos.writeObject(resultSendMsg);
+                    break;
+                case "cancelproject":
+                    String resultCancelProject = cancelProject(splittedCommand[1]);
+                    oos.writeObject(resultCancelProject);
                     break;
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -537,6 +542,59 @@ public class TCPServer implements ServerInterface{
                     this.multicastChat = currProject.getMulticast();
                     result = ("OK"+multicastChat);
                     System.out.println("result send chat: " + result);
+                }else result = "L'utente non è un membro del progetto";
+            else result = "non esiste un progetto con questo nome";
+        }
+
+        return result;
+    }
+
+    @Override
+    public String readChat(String projectName) {
+        String result = null;
+
+        for(Project currProject: dataProjects){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    this.multicastChat = currProject.getMulticast();
+                    result = ("OK"+multicastChat);
+                    System.out.println("result send chat: " + result);
+                }else result = "L'utente non è un membro del progetto";
+            else result = "non esiste un progetto con questo nome";
+        }
+
+        return result;
+    }
+
+    @Override
+    public String cancelProject(String projectName) throws IOException {
+        String result = null;
+        int countCards = 0;
+
+        for(Project currProject: dataProjects){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    countCards = currProject.countCards();
+                    if(currProject.getDONE().size() == countCards){
+                        //rimuovo il progetto
+                        projectList.getList().remove(currProject.getName());
+                        result = currProject.deleteDirectory();
+                        projectList.store();
+                        //aggiorno il multicast
+                        InfoMultiCastConnection mserverLeave = null;
+                        for(InfoMultiCastConnection info: multicastAddresses){
+                            if(info.getmAddress().equals(currProject.getMulticast())){
+                                try {
+                                    info.getMulticastsocket().leaveGroup(InetAddress.getByName(currProject.getMulticast()));
+                                    mserverLeave = info;
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                info.getMulticastsocket().leaveGroup(InetAddress.getByName(currProject.getMulticast()));
+                            }
+                        }
+                    }else result = "Ci sono delle card che non sono terminate";
+
                 }else result = "L'utente non è un membro del progetto";
             else result = "non esiste un progetto con questo nome";
         }

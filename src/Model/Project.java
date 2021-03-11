@@ -150,6 +150,30 @@ public class Project implements Serializable {
         return list;
     }
 
+    public String deleteDirectory(){
+        String result = null;
+
+        String[] entries = dir.list();
+        if(entries.length!=0){
+            for(String s: entries){
+                File currFile = new File(dir.getPath(),s);
+                currFile.delete();
+            }
+        }
+        if(dir.delete())
+            return result = "OK";
+        else result = "Non è stato possibile cancellare il progetto";
+
+        return result;
+    }
+
+    public int countCards(){
+        int count = 0;
+        count = TODO.size() + INPROGRESS.size()+ TOBEREVISITED.size() + DONE.size();
+
+        return count;
+    }
+
     public String getName() {
         return this.name;
     }

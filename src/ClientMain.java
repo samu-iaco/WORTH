@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -167,12 +168,25 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         getCardHistory(splittedCommand);
                         break;
+                    case "readchat":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        readChat(splittedCommand);
                     case "sendchatmsg":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
                         sendChatMsg(splittedCommand,in);
+                        break;
+                    case "cancelproject":
+                        if(!alreadyLogged){
+                            System.err.println("Prima devi effettuare il login");
+                            break;
+                        }
+                        cancelProject(splittedCommand);
                         break;
                 }
 
@@ -199,7 +213,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         if(resultLogin.getMessage().equals("OK")){
             System.out.println("Utente: " + splittedCommand[1] + " correttamente loggato");
             listUsersStatus = resultLogin.getList();
-            if(resultLogin.getMulticast()!=null){
+                if(resultLogin.getMulticast()!=null){
                 for(InfoMultiCastConnection info: resultLogin.getMulticast()){
                     //aggiungo per ogni utente che logga informazioni sul
                     MulticastSocket mLogin;
@@ -341,6 +355,37 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }else System.err.println(result.getMessage());
     }
 
+    public void readChat(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        String result;
+        String byteToString = null;
+        boolean ok = true;
+        byte[] receiveBuffer = new byte[1024]; //alloco il buffer per la ricezione dei messaggi
+        result = (String) ois.readObject();
+        System.out.println(result.substring(0,2));  //risposta dal server
+        System.out.println(result.substring(2,11)); //indirizzo multicast
+        if(result.substring(0,2).equals("OK")){
+            DatagramPacket receivedPacket;
+            for(InfoMultiCastConnection info: multiCastAddresses){
+                if(info.getmAddress().equals(result.substring(2,11))){
+                    while(ok){
+                        receivedPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                        try{
+                            info.getMulticastsocket().receive(receivedPacket);
+                            byteToString = new String(receivedPacket.getData(), 0, receivedPacket.getLength(), StandardCharsets.US_ASCII);
+                            System.out.println(byteToString);
+                        } catch (SocketTimeoutException e) {
+                            System.out.println("messaggi finiti");
+                            ok = false;
+                        }
+
+                    }
+                }
+            }
+
+        }else System.err.println(result);
+    }
+
     public void sendChatMsg(String[] splittedCommand, Scanner in) throws IOException, ClassNotFoundException {
         oos.writeObject(splittedCommand);
         String message;
@@ -348,8 +393,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         System.out.println("Inserisci il messaggio da inviare: ");
         message = in.nextLine();
         byte[] sendBuffer = message.getBytes();
+        //System.out.println("dimenione del messaggio: " + sendBuffer.);
         result = (String) ois.readObject();
-        System.out.println("result chat client: " + result);
         System.out.println(result.substring(0,2));  //risposta dal server
         System.out.println(result.substring(2,11)); //indirizzo multicast
         if(result.substring(0,2).equals("OK")){
@@ -370,6 +415,16 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }else System.err.println(result);
 
 
+    }
+
+    public void cancelProject(String[] splittedCommand) throws IOException, ClassNotFoundException {
+        oos.writeObject(splittedCommand);
+        String result = null;
+        result = (String) ois.readObject();
+
+        if(result.equals("OK")){
+            System.out.println("Progetto " + splittedCommand[1] + " cancellato");
+        }else System.err.print(result);
     }
 
     @Override

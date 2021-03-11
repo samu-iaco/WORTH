@@ -1,6 +1,8 @@
 import Model.Card;
 import Model.Project;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
@@ -91,4 +93,15 @@ public interface ServerInterface {
      */
     String sendChatMsg(String projectName);
 
+    /**
+     * @param projectName nome del progetto
+     * @return i messaggi della chat del progetto projectName
+     */
+    String readChat(String projectName);
+
+    /**
+     * @param projectName nome del progetto
+     * @return cancella il progetto se tutte le card sono nella lista DONE
+     */
+    String cancelProject(String projectName) throws IOException;
 }
