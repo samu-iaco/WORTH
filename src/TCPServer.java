@@ -7,6 +7,9 @@ import java.io.*;
 import java.net.*;
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
@@ -19,6 +22,7 @@ public class TCPServer implements ServerInterface{
     private ArrayList<MulticastGen> multicastGens;
     private ArrayList<InfoMultiCastConnection> multicastAddresses;
     private File addresses;
+    private ConcurrentHashMap<String,ClientInfo> online;
     private String multicastChat;
 
     ServerSocket serverSocket; //serverSocket per TCP
@@ -29,10 +33,15 @@ public class TCPServer implements ServerInterface{
     MulticastGen multicastGen;
 
     private String currUsername;
+    /**
+     * Il pool dei thread in esecuzione
+     */
+    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
 
     public TCPServer(SignedUpUsers userList, SignedUpProjects projectList) throws IOException, ClassNotFoundException {
         serverSocket = new ServerSocket(PORT_TCP);
+
         this.projectList = projectList;
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
@@ -91,7 +100,8 @@ public class TCPServer implements ServerInterface{
         while(true){
             // Aspetto una connessione
             Socket sock = serverSocket.accept();
-            System.out.println("connessione accettata da: " + sock.getInetAddress().getHostAddress());
+
+            //System.out.println("connessione accettata da: " + sock.getInetAddress().getHostAddress());
 
             // Apro gli stream di Input e Output verso il socket
             ois = new ObjectInputStream(sock.getInputStream());
@@ -99,16 +109,35 @@ public class TCPServer implements ServerInterface{
             oos = new ObjectOutputStream(sock.getOutputStream());
             // Ottengo le informazioni di login dal socket
             User clientUser = (User) ois.readObject();
+
+            //creo l'oggetto che descrive le informazioni sulla connessione del client
+            ClientInfo clientInfo = new ClientInfo();
+            if(userList.isValid(clientUser)){
+                System.out.println("connessione accettata da: " + clientUser.getName());
+
+                //clientInfo.setDataOutputStream(dos);
+                clientInfo.setObjectInputStream(ois);
+                clientInfo.setObjectOutputStream(oos);
+                clientInfo.setSocket(sock);
+
+                //oggetto che gestisce la connessione con l'utente
+                LoggedInHandler client = new LoggedInHandler(clientInfo, this);
+                client.setClientUser(clientUser);
+                client.setSignedUpUsers(userList);
+                System.out.println("avviando l'executor... ");
+                executor.execute(client);
+            }
+
             this.currUsername = clientUser.getName();
             register = new RMI_register_Class(userList);
             resultLogin = login(clientUser);
             oos.writeObject(resultLogin);
-
-            start();
+            //System.out.println("start server..");
+            //start();
         }
     }
 
-    public void start() {
+    public synchronized void start() {
         String[] splittedCommand;
         try{
             splittedCommand = (String[]) ois.readObject();
@@ -194,9 +223,10 @@ public class TCPServer implements ServerInterface{
         for(User currUser: dataUsers){
             if(u.getName().equals(currUser.getName()))
                 if(u.getPassword().equals(currUser.getPassword())){
-                    if(u.getStatus().equals("offline")){
+                    if(currUser.getStatus().equals("offline")){
                         tmp = true;
                         currUser.setStatus("online");
+                        //online.putIfAbsent(currUser.getName(),null);
                         register.update(currUser.getName(),"online");
                         for(Project currProject : dataProjects) { //Multicast info of projects that user is member
                             if (currProject.isInProject(currUsername))
@@ -241,6 +271,7 @@ public class TCPServer implements ServerInterface{
 
         String result = null;
         boolean finish = false;
+        System.out.println("ciao dal server");
 
         if(dataUsers.isEmpty()) result = "Nessun utente registrato";
         for(User currUser: dataUsers){

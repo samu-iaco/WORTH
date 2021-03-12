@@ -26,7 +26,6 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     private static final int PORT_TCP = 9999;
 
     private SocketChannel client;
-    private static final String ServerAddress = "127.0.0.1";
     private DataInputStream dis;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
@@ -194,6 +193,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         } catch (IOException | NotBoundException | UserAlreadyExistsException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+        System.exit(0);
     }
 
 

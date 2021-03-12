@@ -82,6 +82,15 @@ public class SignedUpUsers {
     }
 
     /**
+     * Controllo se l'utente esiste
+     * @param u l'utente da controllare
+     * @return se è un utente valido o meno
+     */
+    public boolean isValid(User u){//fare getUser() in User
+        return users.containsKey(u.getName()) && users.get(u.getName()).getPassword().equals(u.getPassword());
+    }
+
+    /**
      * salva su file
      */
     private synchronized void store(){
