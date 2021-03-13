@@ -40,13 +40,13 @@ public class LoggedInHandler implements Runnable {
     }
 
     public synchronized void start() {
-        String[] splittedCommand;
+        String[] command;
         try{
-            splittedCommand = (String[]) info.getObjectInputStream().readObject();
-            System.out.println("command: " + splittedCommand[0]);
-            switch (splittedCommand[0]){
+            command = (String[]) info.getObjectInputStream().readObject();
+            System.out.println("command: " + command[0]);
+            switch (command[0]){
                 case "logout":
-                    String resultLogout = server.logout(splittedCommand[1]);
+                    String resultLogout = server.logout(command[1]);
                     info.getObjectOutputStream().writeObject(resultLogout); //invio verso il client
                     break;
                 case "listusers":
@@ -65,43 +65,43 @@ public class LoggedInHandler implements Runnable {
                     info.getObjectOutputStream().writeObject(userProjects);
                     break;
                 case "createproject":
-                    String resultCreateProject = server.createProject(splittedCommand[1],clientUser.getName());
+                    String resultCreateProject = server.createProject(command[1],clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultCreateProject);
                     break;
                 case "addmember":
-                    String resultCreateMember = server.addMember(splittedCommand[1],splittedCommand[2]);
+                    String resultCreateMember = server.addMember(command[1],command[2]);
                     info.getObjectOutputStream().writeObject(resultCreateMember);
                     break;
                 case "showmembers":
-                    ToClient<String> resultShowMembers = server.showMembers(splittedCommand[1]);
+                    ToClient<String> resultShowMembers = server.showMembers(command[1]);
                     info.getObjectOutputStream().writeObject(resultShowMembers);
                     break;
                 case "showcards":
-                    ToClient<Card> resultShowCards = server.showCards(splittedCommand[1]);
+                    ToClient<Card> resultShowCards = server.showCards(command[1]);
                     info.getObjectOutputStream().writeObject(resultShowCards);
                     break;
                 case "addcard":
-                    String resultAddCard = server.addCard(splittedCommand[1],splittedCommand[2],splittedCommand[3]);
+                    String resultAddCard = server.addCard(command[1],command[2],command[3]);
                     info.getObjectOutputStream().writeObject(resultAddCard);
                     break;
                 case "movecard":
-                    String resultMoveCard = server.moveCard(splittedCommand[1],splittedCommand[2],splittedCommand[3],splittedCommand[4]);
+                    String resultMoveCard = server.moveCard(command[1],command[2],command[3],command[4]);
                     info.getObjectOutputStream().writeObject(resultMoveCard);
                     break;
                 case "getcardhistory":
-                    ToClient<String> resultCardHistory = server.getCardHistory(splittedCommand[1],splittedCommand[2]);
+                    ToClient<String> resultCardHistory = server.getCardHistory(command[1],command[2]);
                     info.getObjectOutputStream().writeObject(resultCardHistory);
                     break;
                 case "readchat":
-                    String resultReadChat = server.readChat(splittedCommand[1]);
+                    String resultReadChat = server.readChat(command[1]);
                     info.getObjectOutputStream().writeObject(resultReadChat);
                     break;
                 case "sendchatmsg":
-                    String resultSendMsg = server.sendChatMsg(splittedCommand[1]);
+                    String resultSendMsg = server.sendChatMsg(command[1]);
                     info.getObjectOutputStream().writeObject(resultSendMsg);
                     break;
                 case "cancelproject":
-                    String resultCancelProject = server.cancelProject(splittedCommand[1]);
+                    String resultCancelProject = server.cancelProject(command[1]);
                     info.getObjectOutputStream().writeObject(resultCancelProject);
                     break;
             }

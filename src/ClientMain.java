@@ -63,12 +63,12 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
             while(ok){
 
-                String command = in.nextLine();
-                String[] splittedCommand = command.split(" ");
-                switch (splittedCommand[0].toLowerCase()){
+                String s = in.nextLine();
+                String[] command = s.split(" ");
+                switch (command[0].toLowerCase()){
 
                     case "register":
-                        register(splittedCommand,registerRMI);
+                        register(command,registerRMI);
                         break;
                     case "login":
 
@@ -76,24 +76,24 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                             System.err.println("Un utente è gia loggato, prima si deve scollegare");
                             break;
                         }
-                        //TCPClient client = new TCPClient(new User(splittedCommand[1],splittedCommand[2]));
+                        //TCPClient client = new TCPClient(new User(command[1],command[2]));
 
-                        boolean resultLogin = login(splittedCommand,client);
+                        boolean resultLogin = login(command,client);
                         if(resultLogin){
                             alreadyLogged = true;
-                            System.out.println("Registrazione di " + splittedCommand[1] + " alla callback");
-                            registerRMI.registerForCallback(expCallback,splittedCommand[1]);
+                            System.out.println("Registrazione di " + command[1] + " alla callback");
+                            registerRMI.registerForCallback(expCallback,command[1]);
                         }
                         break;
                     case "logout":
                         System.out.println("ciao");
                         boolean resultLogout = false;
                         if(alreadyLogged)
-                            resultLogout = logout(splittedCommand[1],splittedCommand);
+                            resultLogout = logout(command);
                         else System.err.println("Non c'è nessun utente collegato, impossibile effettuare il logout");
                         if(resultLogout) {
                             alreadyLogged = false;
-                            System.out.println("Utente: " + splittedCommand[1] + " scollegato");
+                            System.out.println("Utente: " + command[1] + " scollegato");
                         }
                         ok = false;
                         break;
@@ -102,90 +102,91 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        listusers(splittedCommand);
+                        listusers(command);
                         break;
                     case "listonlineusers":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        listonlineusers(splittedCommand);
+                        listonlineusers(command);
                         break;
                     case "listprojects":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        listProjects(splittedCommand);
+                        listProjects(command);
                         break;
                     case "createproject":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        createProject(splittedCommand);
+                        createProject(command);
                         break;
                     case "addmember":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        addmember(splittedCommand);
+                        addmember(command);
                         break;
                     case "showmembers":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        showmembers(splittedCommand);
+                        showmembers(command);
                         break;
                     case "showcards":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        showcards(splittedCommand);
+                        showcards(command);
                         break;
                     case "addcard":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        addCard(splittedCommand);
+                        addCard(command);
                         break;
                     case "movecard":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        movecard(splittedCommand);
+                        movecard(command);
                         break;
                     case "getcardhistory":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        getCardHistory(splittedCommand);
+                        getCardHistory(command);
                         break;
                     case "readchat":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        readChat(splittedCommand);
+                        readChat(command);
+                        break;
                     case "sendchatmsg":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        sendChatMsg(splittedCommand,in);
+                        sendChatMsg(command,in);
                         break;
                     case "cancelproject":
                         if(!alreadyLogged){
                             System.err.println("Prima devi effettuare il login");
                             break;
                         }
-                        cancelProject(splittedCommand);
+                        cancelProject(command);
                         break;
                 }
 
@@ -197,21 +198,21 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     }
 
 
-    public void register(String[] splittedCommand, RMI_register_Interface registerRMI) throws UserAlreadyExistsException, RemoteException {
+    public void register(String[] command, RMI_register_Interface registerRMI) throws UserAlreadyExistsException, RemoteException {
         String result = "";
-        if(splittedCommand.length<3) registerRMI.register("","");
-        else if(splittedCommand.length>3) System.out.println("Hai inserito troppi argomenti");
-        else result = registerRMI.register(splittedCommand[1],splittedCommand[2]);
+        if(command.length<3) registerRMI.register("","");
+        else if(command.length>3) System.out.println("Hai inserito troppi argomenti");
+        else result = registerRMI.register(command[1],command[2]);
         System.out.println(result);
     }
 
-    public boolean login(String[] splittedCommand, SocketChannel client) throws IOException, ClassNotFoundException {
+    public boolean login(String[] command, SocketChannel client) throws IOException, ClassNotFoundException {
         //invio al server
-        oos.writeObject(new User(splittedCommand[1],splittedCommand[2]));
+        oos.writeObject(new User(command[1],command[2]));
         //ricezione dal server
         this.resultLogin = (Login) ois.readObject();
         if(resultLogin.getMessage().equals("OK")){
-            System.out.println("Utente: " + splittedCommand[1] + " correttamente loggato");
+            System.out.println("Utente: " + command[1] + " correttamente loggato");
             listUsersStatus = resultLogin.getList();
                 if(resultLogin.getMulticast()!=null){
                 for(InfoMultiCastConnection info: resultLogin.getMulticast()){
@@ -237,10 +238,10 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }
     }
 
-    public boolean logout(String userName, String[] splittedCommand) throws IOException, ClassNotFoundException {
+    public boolean logout(String[] command) throws IOException, ClassNotFoundException {
 
         //invio al server la richiesta di logout
-        oos.writeObject(splittedCommand);
+        oos.writeObject(command);
         //ricezione dal server del logout
         String result = (String) ois.readObject();
         System.out.println("result: " + result);
@@ -250,10 +251,10 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         else return false;
     }
 
-    public void listusers(String[] splittedCommand) throws IOException, ClassNotFoundException {
+    public void listusers(String[] command) throws IOException, ClassNotFoundException {
         System.out.println("richiesta di vedere la lista degli utenti registrati");
         //invio la richiesta del comando al server
-        oos.writeObject(splittedCommand);
+        oos.writeObject(command);
 
         ArrayList<UserAndStatus> list= (ArrayList<UserAndStatus>) ois.readObject();
 
@@ -263,8 +264,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
     }
 
-    public void listonlineusers(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void listonlineusers(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
 
         ArrayList<UserAndStatus> list= (ArrayList<UserAndStatus>) ois.readObject();
 
@@ -273,38 +274,38 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }
     }
 
-    public void listProjects(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void listProjects(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         ArrayList<Project> list= (ArrayList<Project>) ois.readObject();
         Gson gson = new Gson();
         String projectsJson = gson.toJson(list);
         System.out.println(projectsJson);
     }
 
-    public void createProject(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void createProject(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
 
         String result = (String) ois.readObject();
 
         if(result.equals("OK")){
-            System.out.println("Progetto: " + splittedCommand[1] + " creato");
+            System.out.println("Progetto: " + command[1] + " creato");
         }else
             System.err.println(result);
     }
 
-    public void addmember(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void addmember(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         String result = (String) ois.readObject();
 
         if(result.equals("OK")){
-            System.out.println("Utente: " + splittedCommand[2] + " correttamente inserito nel progetto "
-            + splittedCommand[1]);
+            System.out.println("Utente: " + command[2] + " correttamente inserito nel progetto "
+            + command[1]);
         }
         else System.err.println(result);
     }
 
-    public void showmembers(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void showmembers(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         ToClient<String> result = (ToClient<String>) ois.readObject();
         if(result.getMessage().equals("OK")){
             Gson gson = new Gson();
@@ -315,8 +316,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }else System.err.println(result.getMessage());
     }
 
-    public void showcards(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void showcards(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         ToClient<Card> result = (ToClient<Card>) ois.readObject();
 
         if(result.getMessage().equals("OK")){
@@ -327,24 +328,24 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }else System.err.println(result.getMessage());
     }
 
-    public void addCard(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void addCard(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         String result = (String) ois.readObject();
         if(result.equals("OK")){
-            System.out.println("card: " + splittedCommand[2] + " aggiunta a: " + splittedCommand[1]);
+            System.out.println("card: " + command[2] + " aggiunta a: " + command[1]);
         }else System.err.println(result);
     }
 
-    public void movecard(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void movecard(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         String result = (String) ois.readObject();
         if(result.equals("OK")){
-            System.out.println("card: " + splittedCommand[2] + " spostata a: " + splittedCommand[4]);
+            System.out.println("card: " + command[2] + " spostata a: " + command[4]);
         }else System.err.println(result);
     }
 
-    public void getCardHistory(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void getCardHistory(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         ToClient<String> result = (ToClient<String>) ois.readObject();
         if(result.getMessage().equals("OK")){
             Gson gson = new Gson();
@@ -355,15 +356,13 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }else System.err.println(result.getMessage());
     }
 
-    public void readChat(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void readChat(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         String result;
         String byteToString = null;
         boolean ok = true;
         byte[] receiveBuffer = new byte[1024]; //alloco il buffer per la ricezione dei messaggi
         result = (String) ois.readObject();
-        System.out.println(result.substring(0,2));  //risposta dal server
-        System.out.println(result.substring(2,11)); //indirizzo multicast
         if(result.substring(0,2).equals("OK")){
             DatagramPacket receivedPacket;
             for(InfoMultiCastConnection info: multiCastAddresses){
@@ -386,8 +385,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }else System.err.println(result);
     }
 
-    public void sendChatMsg(String[] splittedCommand, Scanner in) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void sendChatMsg(String[] command, Scanner in) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         String message;
         String result;
         System.out.println("Inserisci il messaggio da inviare: ");
@@ -417,13 +416,13 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
     }
 
-    public void cancelProject(String[] splittedCommand) throws IOException, ClassNotFoundException {
-        oos.writeObject(splittedCommand);
+    public void cancelProject(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
         String result = null;
         result = (String) ois.readObject();
 
         if(result.equals("OK")){
-            System.out.println("Progetto " + splittedCommand[1] + " cancellato");
+            System.out.println("Progetto " + command[1] + " cancellato");
         }else System.err.print(result);
     }
 

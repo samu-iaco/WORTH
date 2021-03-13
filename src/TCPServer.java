@@ -22,7 +22,6 @@ public class TCPServer implements ServerInterface{
     private ArrayList<MulticastGen> multicastGens;
     private ArrayList<InfoMultiCastConnection> multicastAddresses;
     private File addresses;
-    private ConcurrentHashMap<String,ClientInfo> online;
     private String multicastChat;
 
     ServerSocket serverSocket; //serverSocket per TCP
@@ -101,7 +100,7 @@ public class TCPServer implements ServerInterface{
             // Aspetto una connessione
             Socket sock = serverSocket.accept();
 
-            //System.out.println("connessione accettata da: " + sock.getInetAddress().getHostAddress());
+            System.out.println("connessione accettata da: " + sock.getInetAddress().getHostAddress());
 
             // Apro gli stream di Input e Output verso il socket
             ois = new ObjectInputStream(sock.getInputStream());
@@ -132,82 +131,9 @@ public class TCPServer implements ServerInterface{
             register = new RMI_register_Class(userList);
             resultLogin = login(clientUser);
             oos.writeObject(resultLogin);
-            //System.out.println("start server..");
-            //start();
         }
     }
 
-    public synchronized void start() {
-        String[] splittedCommand;
-        try{
-            splittedCommand = (String[]) ois.readObject();
-            System.out.println("command: " + splittedCommand[0]);
-            switch (splittedCommand[0]){
-                case "logout":
-                    String resultLogout = logout(splittedCommand[1]);
-                    oos.writeObject(resultLogout); //invio verso il client
-                    break;
-                case "listusers":
-                    ArrayList<UserAndStatus> listToClient;
-                    listToClient = listUsers();
-                    oos.writeObject(listToClient); //invio al client
-                    break;
-                case "listonlineusers":
-                    ArrayList<UserAndStatus> listOnlineUsers;
-                    listOnlineUsers = listOnlineusers();
-                    oos.writeObject(listOnlineUsers);
-                    break;
-                case "listprojects":
-                    ArrayList<Project> userProjects;
-                    userProjects = listProjects(currUsername);
-                    oos.writeObject(userProjects);
-                    break;
-                case "createproject":
-                    String resultCreateProject = createProject(splittedCommand[1],currUsername);
-                    oos.writeObject(resultCreateProject);
-                    break;
-                case "addmember":
-                    String resultCreateMember = addMember(splittedCommand[1],splittedCommand[2]);
-                    oos.writeObject(resultCreateMember);
-                    break;
-                case "showmembers":
-                    ToClient<String> resultShowMembers = showMembers(splittedCommand[1]);
-                    oos.writeObject(resultShowMembers);
-                    break;
-                case "showcards":
-                    ToClient<Card> resultShowCards = showCards(splittedCommand[1]);
-                    oos.writeObject(resultShowCards);
-                    break;
-                case "addcard":
-                    String resultAddCard = addCard(splittedCommand[1],splittedCommand[2],splittedCommand[3]);
-                    oos.writeObject(resultAddCard);
-                    break;
-                case "movecard":
-                    String resultMoveCard = moveCard(splittedCommand[1],splittedCommand[2],splittedCommand[3],splittedCommand[4]);
-                    oos.writeObject(resultMoveCard);
-                    break;
-                case "getcardhistory":
-                    ToClient<String> resultCardHistory = getCardHistory(splittedCommand[1],splittedCommand[2]);
-                    oos.writeObject(resultCardHistory);
-                    break;
-                case "readchat":
-                    String resultReadChat = readChat(splittedCommand[1]);
-                    oos.writeObject(resultReadChat);
-                    break;
-                case "sendchatmsg":
-                    String resultSendMsg = sendChatMsg(splittedCommand[1]);
-                    oos.writeObject(resultSendMsg);
-                    break;
-                case "cancelproject":
-                    String resultCancelProject = cancelProject(splittedCommand[1]);
-                    oos.writeObject(resultCancelProject);
-                    break;
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-    }
 
     public synchronized Login<UserAndStatus> login(User u) throws RemoteException {
         String result = null;
@@ -226,7 +152,6 @@ public class TCPServer implements ServerInterface{
                     if(currUser.getStatus().equals("offline")){
                         tmp = true;
                         currUser.setStatus("online");
-                        //online.putIfAbsent(currUser.getName(),null);
                         register.update(currUser.getName(),"online");
                         for(Project currProject : dataProjects) { //Multicast info of projects that user is member
                             if (currProject.isInProject(currUsername))
@@ -260,15 +185,6 @@ public class TCPServer implements ServerInterface{
         }
 
 
-        /*ArrayList<User> data = new ArrayList<>();
-        userList.getList().forEach((s, user) -> {
-            synchronized (user){
-                data.add(user);
-            }
-        });
-
-         */
-
         String result = null;
         boolean finish = false;
         System.out.println("ciao dal server");
@@ -294,14 +210,7 @@ public class TCPServer implements ServerInterface{
     @Override
     public ArrayList<UserAndStatus> listUsers(){
         ArrayList<UserAndStatus> list = new ArrayList<>();
-        /*ArrayList<User> data = new ArrayList<>();
-        userList.getList().forEach((s, user) -> {
-            synchronized (user){
-                data.add(user);
-            }
-        });
 
-         */
 
         for(User currUser: dataUsers){
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
@@ -312,14 +221,7 @@ public class TCPServer implements ServerInterface{
     @Override
     public ArrayList<UserAndStatus> listOnlineusers() {
         ArrayList<UserAndStatus> list = new ArrayList<>();
-        /*ArrayList<User> data = new ArrayList<>();
-        userList.getList().forEach((s, user) -> {
-            synchronized (user){
-                data.add(user);
-            }
-        });
 
-         */
 
         for(User currUser: dataUsers){
             if(currUser.getStatus().equals("online"))
@@ -333,14 +235,7 @@ public class TCPServer implements ServerInterface{
     @Override
     public ArrayList<Project> listProjects(String username) {
         ArrayList<Project> list = new ArrayList<>();
-        /*ArrayList<Project> data = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                data.add(Project);
-            }
-        });
 
-         */
 
         if(dataProjects.isEmpty()) return null;
         for(Project currProject: dataProjects){
@@ -392,25 +287,8 @@ public class TCPServer implements ServerInterface{
 
     @Override
     public String addMember(String projectName, String username) {
-        /*ArrayList<Project> data = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                data.add(Project);
-            }
-        });
-
-         */
-
         String result = null;
 
-        /*ArrayList<User> dataUser = new ArrayList<>();
-        userList.getList().forEach((s, user) -> {
-            synchronized (user){
-                dataUser.add(user);
-            }
-        });
-
-         */
         boolean userExist = false;
         for(User currUser: dataUsers){
             if(currUser.getName().equals(username)){
@@ -440,15 +318,6 @@ public class TCPServer implements ServerInterface{
         ArrayList<String> list = null;
         String result = null;
 
-        /*ArrayList<Project> data = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                data.add(Project);
-            }
-        });
-
-         */
-
         for(Project currProject: dataProjects){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
@@ -466,14 +335,6 @@ public class TCPServer implements ServerInterface{
         String result = null;
         ArrayList<Card> list = null;
 
-        /*ArrayList<Project> data = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                data.add(Project);
-            }
-        });
-
-         */
 
         for(Project currProject: dataProjects){
             if(currProject.getName().equals(projectName))
@@ -491,15 +352,6 @@ public class TCPServer implements ServerInterface{
     public String addCard(String projectName, String cardName, String description) {
         String result = null;
 
-        /*ArrayList<Project> data = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                data.add(Project);
-            }
-        });
-
-         */
-
         for(Project currProject: dataProjects){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
@@ -516,14 +368,6 @@ public class TCPServer implements ServerInterface{
     public String moveCard(String projectName, String cardName, String partenza, String arrivo) {
         String result = null;
 
-        /*ArrayList<Project> data = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                data.add(Project);
-            }
-        });
-
-         */
 
         for(Project currProject: dataProjects){
             if(currProject.getName().equals(projectName))
@@ -542,14 +386,6 @@ public class TCPServer implements ServerInterface{
         ArrayList<String> list = null;
         String result = null;
 
-        /*ArrayList<Project> data = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                data.add(Project);
-            }
-        });
-
-         */
 
         for(Project currProject: dataProjects){
             if(currProject.getName().equals(projectName))
@@ -589,7 +425,6 @@ public class TCPServer implements ServerInterface{
                 if(currProject.getProjectMembers().contains(currUsername)){
                     this.multicastChat = currProject.getMulticast();
                     result = ("OK"+multicastChat);
-                    System.out.println("result send chat: " + result);
                 }else result = "L'utente non è un membro del progetto";
             else result = "non esiste un progetto con questo nome";
         }
@@ -622,6 +457,7 @@ public class TCPServer implements ServerInterface{
                                     e.printStackTrace();
                                 }
                                 info.getMulticastsocket().leaveGroup(InetAddress.getByName(currProject.getMulticast()));
+                                result = "OK";
                             }
                         }
                     }else result = "Ci sono delle card che non sono terminate";

@@ -1,6 +1,10 @@
 package Model;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -68,7 +72,13 @@ public class Project implements Serializable {
         try{
             if(!file.exists()){
                 file.createNewFile();
-                System.out.println("ciao nel nuovo file");
+                FileOutputStream fos = new FileOutputStream(file);
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String dataCard = gson.toJson(description);
+                byte[] b = dataCard.getBytes();
+                fos.write(b);
+
+                fos.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -153,7 +163,7 @@ public class Project implements Serializable {
     public String deleteDirectory(){
         String result = null;
 
-        String[] entries = dir.list();
+        String[] entries = this.dir.list();
         if(entries.length!=0){
             for(String s: entries){
                 File currFile = new File(dir.getPath(),s);

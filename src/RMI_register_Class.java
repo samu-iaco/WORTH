@@ -8,19 +8,28 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class RMI_register_Class extends UnicastRemoteObject implements RMI_register_Interface {
-    SignedUpUsers users;
+    SignedUpUsers userList;
     private List<InfoCallback> clients;
+    private ArrayList<User> dataUsers;
 
 
-    protected RMI_register_Class(SignedUpUsers users) throws RemoteException {
+    protected RMI_register_Class(SignedUpUsers userList) throws RemoteException {
         super();
-        this.users = users;
+        this.userList = userList;
         clients = new ArrayList<>();
+        this.dataUsers = new ArrayList<>();
+        userList.getList().forEach((s, user) -> {
+            synchronized (user){
+                dataUsers.add(user);
+            }
+        });
     }
 
     @Override
     public synchronized String register(String nickUtente, String password) throws RemoteException, UserAlreadyExistsException {
         System.out.println("Richiesta di registrazione da parte di: " + nickUtente);
+
+
         if(nickUtente.isEmpty() || password.isEmpty()) {
             System.err.println("Il nome utente o la password non possono essere vuoti");
             throw new IllegalArgumentException("Nome utente o password vuoti");
@@ -28,7 +37,10 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
 
         User user = new User(nickUtente,password);
 
-        if(users.addUser(user)) return "OK"; //OK se l'utente viene registrato
+        if(userList.addUser(user)) {
+            userList.store();
+            return "OK"; //OK se l'utente viene registrato
+        }
 
         return null;    //null se l'utente non viene registrato
     }

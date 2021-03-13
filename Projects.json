@@ -1,54 +1,27 @@
 [
   {
-    "name": "rfd",
-    "port": 61509,
-    "multicast": "224.0.0.1",
-    "cards": [],
-    "projectMembers": [
-      "q"
-    ],
-    "TODO": [],
-    "INPROGRESS": [],
-    "TOBEREVISITED": [],
-    "DONE": []
-  },
-  {
-    "name": "fdds",
-    "port": 64659,
-    "multicast": "224.0.0.2",
-    "cards": [],
-    "projectMembers": [
-      "q"
-    ],
-    "TODO": [],
-    "INPROGRESS": [],
-    "TOBEREVISITED": [],
-    "DONE": []
-  },
-  {
-    "name": "dwqa",
-    "port": 33219,
-    "multicast": "224.0.0.3",
-    "cards": [],
-    "projectMembers": [
-      "q"
-    ],
-    "TODO": [],
-    "INPROGRESS": [],
-    "TOBEREVISITED": [],
-    "DONE": []
-  },
-  {
     "name": "bighello",
-    "port": 32786,
+    "port": 26715,
     "multicast": "224.0.0.1",
-    "cards": [],
+    "cards": [
+      {
+        "description": "descrizione",
+        "name": "tasks",
+        "cardHistory": [
+          "TODO",
+          "inprogress",
+          "done"
+        ]
+      }
+    ],
     "projectMembers": [
       "q"
     ],
     "TODO": [],
     "INPROGRESS": [],
     "TOBEREVISITED": [],
-    "DONE": []
+    "DONE": [
+      "tasks"
+    ]
   }
 ]
