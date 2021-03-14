@@ -1,5 +1,5 @@
 import Model.Card;
-import Model.InfoMultiCastConnection;
+import Model.infoMultiCastConnection;
 import Model.Project;
 import Remote.Exception.UserAlreadyExistsException;
 import Model.User;
@@ -33,7 +33,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     boolean alreadyLogged = false;
 
     private ArrayList<UserAndStatus> listUsersStatus;
-    private ArrayList<InfoMultiCastConnection> multiCastAddresses;
+    private ArrayList<infoMultiCastConnection> multiCastAddresses;
 
     public static void main(String[] args){
         ClientMain clientMain = new ClientMain();
@@ -215,14 +215,14 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             System.out.println("Utente: " + command[1] + " correttamente loggato");
             listUsersStatus = resultLogin.getList();
                 if(resultLogin.getMulticast()!=null){
-                for(InfoMultiCastConnection info: resultLogin.getMulticast()){
+                for(infoMultiCastConnection info: resultLogin.getMulticast()){
                     //aggiungo per ogni utente che logga informazioni sul
                     MulticastSocket mLogin;
                     try {
                         mLogin = new MulticastSocket(info.getPort());
                         mLogin.joinGroup(InetAddress.getByName(info.getmAddress()));
                         mLogin.setSoTimeout(2000);
-                        multiCastAddresses.add(new InfoMultiCastConnection(mLogin, info.getPort(), info.getmAddress()));
+                        multiCastAddresses.add(new infoMultiCastConnection(mLogin, info.getPort(), info.getmAddress()));
                     }catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -365,7 +365,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         result = (String) ois.readObject();
         if(result.substring(0,2).equals("OK")){
             DatagramPacket receivedPacket;
-            for(InfoMultiCastConnection info: multiCastAddresses){
+            for(infoMultiCastConnection info: multiCastAddresses){
                 if(info.getmAddress().equals(result.substring(2,11))){
                     while(ok){
                         receivedPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
@@ -400,7 +400,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             try (DatagramSocket clientSocket = new DatagramSocket()) {
                 clientSocket.setSoTimeout(2000);
                 DatagramPacket packetToSend;
-                for(InfoMultiCastConnection info: multiCastAddresses){
+                for(infoMultiCastConnection info: multiCastAddresses){
                     if(info.getmAddress().equals(result.substring(2,11))){
                         packetToSend = new DatagramPacket(sendBuffer, sendBuffer.length,
                                                           InetAddress.getByName(info.getmAddress()),info.getPort());
@@ -433,7 +433,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             msClient = new MulticastSocket(port);
             msClient.joinGroup(InetAddress.getByName(mAddress));
             msClient.setSoTimeout(3000);
-            multiCastAddresses.add(new InfoMultiCastConnection(msClient, port, mAddress));
+            multiCastAddresses.add(new infoMultiCastConnection(msClient, port, mAddress));
         } catch (IOException e) {
             e.printStackTrace();
         }

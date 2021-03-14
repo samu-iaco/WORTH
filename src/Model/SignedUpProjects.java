@@ -61,7 +61,7 @@ public class SignedUpProjects {
 
     public Boolean addProject(Project project){
         if(projects.putIfAbsent(project.getName(),project) == null){
-            this.store(); //aggiungo l'utente e salvo il file
+            this.store(); //aggiungo il progetto e salvo il file
             return true;
         }
         else return false;

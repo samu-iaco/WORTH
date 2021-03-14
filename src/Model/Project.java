@@ -7,7 +7,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * classe che gestisce i progetti
@@ -22,6 +26,7 @@ public class Project implements Serializable {
     private ArrayList<String> INPROGRESS;
     private ArrayList<String> TOBEREVISITED;
     private ArrayList<String> DONE;
+    private String pathProject;
     private transient File dir; //transient per evitare la serializzazione di gson
 
 
@@ -37,7 +42,8 @@ public class Project implements Serializable {
         this.port = port;
         this.multicast = multicast;
         projectMembers.add(username);
-        this.dir = new File("./" + name);
+        this.pathProject = "./" + name;
+        this.dir = new File(pathProject);
         if(!dir.exists()) dir.mkdir();
     }
 
@@ -161,20 +167,32 @@ public class Project implements Serializable {
     }
 
     public String deleteDirectory(){
-        String result = null;
+        String result;
 
-        String[] entries = this.dir.list();
-        if(entries.length!=0){
-            for(String s: entries){
-                File currFile = new File(dir.getPath(),s);
-                currFile.delete();
+        String dirToDelete = "./" + name;
+        System.out.println("dir: " + dirToDelete);
+        System.out.println("ciao?");
+        try{
+            String[] entries = dir.list();
+            System.out.println(Arrays.toString(entries));
+            if(entries.length!=0){
+                for(String s: entries){
+                    File currFile = new File(dir.getPath(),s);
+                    currFile.delete();
+                }
             }
+            if(dir.delete())
+                result = "OK";
+            else result = "Non è stato possibile cancellare il progetto";
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        if(dir.delete())
-            return result = "OK";
-        else result = "Non è stato possibile cancellare il progetto";
 
-        return result;
+
+
+        return "prova";
+
     }
 
     public int countCards(){

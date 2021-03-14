@@ -1,7 +1,7 @@
 [
   {
     "name": "bighello",
-    "port": 26715,
+    "port": 34664,
     "multicast": "224.0.0.1",
     "cards": [
       {
@@ -22,6 +22,7 @@
     "TOBEREVISITED": [],
     "DONE": [
       "tasks"
-    ]
+    ],
+    "pathProject": "./bighello"
   }
 ]

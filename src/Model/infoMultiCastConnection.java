@@ -3,12 +3,12 @@ package Model;
 import java.io.Serializable;
 import java.net.MulticastSocket;
 
-public class InfoMultiCastConnection implements Serializable{
+public class infoMultiCastConnection implements Serializable{
     private MulticastSocket multicastsocket;
     private int port;
     private String mAddress;
 
-    public InfoMultiCastConnection(MulticastSocket multicastsocket, int port, String mAddress) {
+    public infoMultiCastConnection(MulticastSocket multicastsocket, int port, String mAddress) {
         super();
         this.multicastsocket = multicastsocket;
         this.port = port;

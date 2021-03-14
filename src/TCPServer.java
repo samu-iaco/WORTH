@@ -7,7 +7,6 @@ import java.io.*;
 import java.net.*;
 import java.rmi.RemoteException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -20,7 +19,7 @@ public class TCPServer implements ServerInterface{
     private ArrayList<User> dataUsers;
     private ArrayList<Project> dataProjects;
     private ArrayList<MulticastGen> multicastGens;
-    private ArrayList<InfoMultiCastConnection> multicastAddresses;
+    private ArrayList<infoMultiCastConnection> multicastAddresses;
     private File addresses;
     private String multicastChat;
 
@@ -73,7 +72,7 @@ public class TCPServer implements ServerInterface{
             InetAddress group = InetAddress.getByName(mProject);
             msServer.joinGroup(group); //aggiungo il server alla porta del server
             msServer.setSoTimeout(3000);
-            multicastAddresses.add(new InfoMultiCastConnection(msServer,projectPort,mProject));
+            multicastAddresses.add(new infoMultiCastConnection(msServer,projectPort,mProject));
         }
 
         //creo il file con gli indirizzi multicast
@@ -139,7 +138,7 @@ public class TCPServer implements ServerInterface{
         String result = null;
         ArrayList<UserAndStatus> list = new ArrayList<>();
         Login<UserAndStatus> login;
-        ArrayList<InfoMultiCastConnection> multicast = new ArrayList<>();
+        ArrayList<infoMultiCastConnection> multicast = new ArrayList<>();
         if(u.getName().isEmpty() || u.getPassword().isEmpty()){
             result = "Nome utente o password vuoti";
         }
@@ -155,7 +154,7 @@ public class TCPServer implements ServerInterface{
                         register.update(currUser.getName(),"online");
                         for(Project currProject : dataProjects) { //Multicast info of projects that user is member
                             if (currProject.isInProject(currUsername))
-                                multicast.add(new InfoMultiCastConnection(null, currProject.getPort(), currProject.getMulticast()));
+                                multicast.add(new infoMultiCastConnection(null, currProject.getPort(), currProject.getMulticast()));
                         }
                     }else result = "Utente già loggato";
                 }else result = "password errata";
@@ -269,13 +268,13 @@ public class TCPServer implements ServerInterface{
         storeMulticast(multicastGen);    //salvo l'indirizzo multicast nel file json
         Project project = new Project(projectName,username,port,mip);
         projectList.addProject(project);
-
+        projectList.store();
         MulticastSocket mServer; //aggiungo il server al multicast
         try {
             mServer = new MulticastSocket(port);
             mServer.joinGroup(InetAddress.getByName(mip));
             mServer.setSoTimeout(3000);
-            multicastAddresses.add(new InfoMultiCastConnection(mServer,port,mip));
+            multicastAddresses.add(new infoMultiCastConnection(mServer,port,mip));
         } catch (IOException e) {
             e.printStackTrace();
 
@@ -350,11 +349,19 @@ public class TCPServer implements ServerInterface{
 
     @Override
     public String addCard(String projectName, String cardName, String description) {
-        String result = null;
+        String result = "Problemi nell'aggiunta nella card";
 
-        for(Project currProject: dataProjects){
+        ArrayList<Project> currData = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                currData.add(Project);
+            }
+        });
+
+        for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
+                    System.out.println("il progetto è giusto");
                     result = currProject.addCard(cardName,description);
                     projectList.store();
                 }else result = "L'utente non è un membro del progetto";
@@ -368,8 +375,14 @@ public class TCPServer implements ServerInterface{
     public String moveCard(String projectName, String cardName, String partenza, String arrivo) {
         String result = null;
 
+        ArrayList<Project> currData = new ArrayList<>();
+        projectList.getList().forEach((s,Project) ->{
+            synchronized (Project){
+                currData.add(Project);
+            }
+        });
 
-        for(Project currProject: dataProjects){
+        for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
                     result = currProject.moveCard(cardName,partenza,arrivo);
@@ -443,12 +456,14 @@ public class TCPServer implements ServerInterface{
                     countCards = currProject.countCards();
                     if(currProject.getDONE().size() == countCards){
                         //rimuovo il progetto
-                        projectList.getList().remove(currProject.getName());
-                        result = currProject.deleteDirectory();
+                        System.out.println(projectList.getList());
+                        //projectList.getList().remove(currProject.getName());
                         projectList.store();
+                        result = currProject.deleteDirectory();
+                        System.out.println("result delete: " + result);
                         //aggiorno il multicast
-                        InfoMultiCastConnection mserverLeave = null;
-                        for(InfoMultiCastConnection info: multicastAddresses){
+                        infoMultiCastConnection mserverLeave = null;
+                        for(infoMultiCastConnection info: multicastAddresses){
                             if(info.getmAddress().equals(currProject.getMulticast())){
                                 try {
                                     info.getMulticastsocket().leaveGroup(InetAddress.getByName(currProject.getMulticast()));
