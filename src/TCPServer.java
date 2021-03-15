@@ -30,7 +30,6 @@ public class TCPServer implements ServerInterface{
     Login<UserAndStatus> resultLogin;
     MulticastGen multicastGen;
 
-    private String currUsername;
     /**
      * Il pool dei thread in esecuzione
      */
@@ -106,35 +105,26 @@ public class TCPServer implements ServerInterface{
             //DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
             oos = new ObjectOutputStream(sock.getOutputStream());
             // Ottengo le informazioni di login dal socket
-            User clientUser = (User) ois.readObject();
+            //User clientUser = (User) ois.readObject();
 
             //creo l'oggetto che descrive le informazioni sulla connessione del client
             ClientInfo clientInfo = new ClientInfo();
-            if(userList.isValid(clientUser)){
-                System.out.println("connessione accettata da: " + clientUser.getName());
 
-                clientInfo.setObjectInputStream(ois);
-                clientInfo.setObjectOutputStream(oos);
-                clientInfo.setSocket(sock);
+            clientInfo.setObjectInputStream(ois);
+            clientInfo.setObjectOutputStream(oos);
+            clientInfo.setSocket(sock);
 
-                //oggetto che gestisce la connessione con l'utente
-                LoggedInHandler client = new LoggedInHandler(clientInfo, this, this.userList);
-                client.setClientUser(clientUser);
-                client.setSignedUpUsers(userList);
+            LoggedInHandler client = new LoggedInHandler(clientInfo, this, this.userList);
+            executor.execute(client);
 
-                System.out.println("avviando l'executor... ");
-                executor.execute(client);
-            }
-
-            this.currUsername = clientUser.getName();
+            //this.currUsername = clientUser.getName();
             register = new RMI_register_Class(userList);
-            resultLogin = login(clientUser);
-            oos.writeObject(resultLogin);
+            //resultLogin = login(clientUser);
         }
     }
 
 
-    public synchronized Login<UserAndStatus> login(User u) throws RemoteException {
+    public synchronized Login<UserAndStatus> login(User u, String currUsername) throws RemoteException {
         String result = null;
         ArrayList<UserAndStatus> list = new ArrayList<>();
         Login<UserAndStatus> login;
@@ -209,7 +199,6 @@ public class TCPServer implements ServerInterface{
 
         if(dataUsers.isEmpty()) result = "Nessun utente registrato";
         for(User currUser: currData){
-            System.out.println("curruser: " + currUser.getName() + " stato: " + currUser.getStatus());
             if(currUser.getName().equals(nickName))
                 if(currUser.getStatus().equals("online")){
                     register.update(nickName,"offline");
@@ -329,8 +318,9 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String addMember(String projectName, String username) {
+    public String addMember(String projectName, String username , String currUsername) {
         String result = null;
+        System.out.println("currusername: " + currUsername);
 
         ArrayList<User> currDataUsers = new ArrayList<>();
         userList.getList().forEach((s,User) ->{
@@ -355,15 +345,22 @@ public class TCPServer implements ServerInterface{
         if(!userExist) return "L'utente che vuoi aggiungere non esiste";
 
         for(Project currProject: currDataProject){
-            if(currProject.getName().equals(projectName))
-                if(currProject.getProjectMembers().contains(currUsername)){
-                    if(!(currProject.isInProject(username))){
+            if(currProject.getName().equals(projectName)) {
+                if (currProject.getProjectMembers().contains(currUsername)) {
+                    if (!(currProject.isInProject(username))) {
                         currProject.addMember(username);
                         projectList.store(); //aggiorno il file
                         result = "OK";
-                    }else result = "L'utente è gia presente nel progetto";
-                }else result = "L'utente non è un membro del progetto";
-            else result = "Non esiste un progetto con questo nome";
+                        return result;
+                    } else {
+                        result = "L'utente è gia presente nel progetto";
+                        return result;
+                    }
+                } else {
+                    result = "L'utente non è un membro del progetto";
+                    return result;
+                }
+            }else result = "Non esiste un progetto con questo nome";
         }
 
         return result;
@@ -371,10 +368,10 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public ToClient<String> showMembers(String projectName) {
+    public ToClient<String> showMembers(String projectName, String currUsername) {
         ArrayList<String> list = null;
         String result = null;
-
+        System.out.println("project" + projectName);
         ArrayList<Project> currData = new ArrayList<>();
         projectList.getList().forEach((s,Project) ->{
             synchronized (Project){
@@ -387,7 +384,11 @@ public class TCPServer implements ServerInterface{
                 if(currProject.getProjectMembers().contains(currUsername)){
                     list = currProject.getProjectMembers();
                     result = "OK";
-                }else result = "L'utente non è un membro del progetto";
+                    return new ToClient<>(result,list);
+                }else {
+                    result = "L'utente non è un membro del progetto";
+                    return new ToClient<>(result,list);
+                }
             else result = "Non esiste un progetto con questo nome";
         }
 
@@ -395,7 +396,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public ToClient<Card> showCards(String projectName) {
+    public ToClient<Card> showCards(String projectName,String currUsername) {
         String result = null;
         ArrayList<Card> list = null;
 
@@ -411,7 +412,11 @@ public class TCPServer implements ServerInterface{
                 if(currProject.getProjectMembers().contains(currUsername)){
                     list = currProject.getCards();
                     result = "OK";
-                }else result = "L'utente non è un membro del progetto";
+                    return new ToClient<>(result, list);
+                }else {
+                    result = "L'utente non è un membro del progetto";
+                    return new ToClient<>(result, list);
+                }
             else result = "Non esiste un progetto con questo nome";
         }
 
@@ -419,7 +424,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String addCard(String projectName, String cardName, String description) {
+    public String addCard(String projectName, String cardName, String description,String currUsername) {
         String result = "Problemi nell'aggiunta nella card";
 
         ArrayList<Project> currData = new ArrayList<>();
@@ -432,7 +437,6 @@ public class TCPServer implements ServerInterface{
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
-                    System.out.println("il progetto è giusto");
                     result = currProject.addCard(cardName,description);
                     projectList.store();
                 }else result = "L'utente non è un membro del progetto";
@@ -443,7 +447,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String moveCard(String projectName, String cardName, String partenza, String arrivo) {
+    public String moveCard(String projectName, String cardName, String partenza, String arrivo,String currUsername) {
         String result = null;
 
         ArrayList<Project> currData = new ArrayList<>();
@@ -466,7 +470,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public ToClient<String> getCardHistory(String projectName, String cardName) {
+    public ToClient<String> getCardHistory(String projectName, String cardName,String currUsername) {
         ArrayList<String> list = null;
         String result = null;
 
@@ -490,7 +494,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String sendChatMsg(String projectName) {
+    public String sendChatMsg(String projectName,String currUsername) {
         String result = null;
 
         ArrayList<Project> currData = new ArrayList<>();
@@ -514,7 +518,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String readChat(String projectName) {
+    public String readChat(String projectName, String currUsername) {
         String result = null;
 
         ArrayList<Project> currData = new ArrayList<>();
@@ -537,7 +541,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String cancelProject(String projectName) throws IOException {
+    public String cancelProject(String projectName, String currUsername) throws IOException {
         String result = null;
         int countCards = 0;
 

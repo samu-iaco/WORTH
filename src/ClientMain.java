@@ -26,7 +26,6 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     private static final int PORT_TCP = 9999;
 
     private SocketChannel client;
-    private DataInputStream dis;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
     private Login<UserAndStatus> resultLogin;
@@ -66,21 +65,15 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                 String s = in.nextLine();
                 String[] command = s.split(" ");
                 switch (command[0].toLowerCase()){
-
                     case "register":
-                        System.out.println("hiedo rgistr");
                         register(command,registerRMI);
                         break;
                     case "login":
-                        System.out.println("chiedo logni");
                         if(alreadyLogged){
                             System.err.println("Un utente è gia loggato, prima si deve scollegare");
                             break;
                         }
-
-                        System.out.println("qui ok");
                         boolean resultLogin = login(command,client);
-                        System.out.println("uguale");
                         if(resultLogin){
                             alreadyLogged = true;
                             System.out.println("Registrazione di " + command[1] + " alla callback");
@@ -95,8 +88,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         if(resultLogout) {
                             alreadyLogged = false;
                             System.out.println("Utente: " + command[1] + " scollegato");
+                            ok = false;
                         }
-                        ok = false;
                         break;
                     case "listusers":
                         if(!alreadyLogged) {
@@ -209,11 +202,10 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
     public boolean login(String[] command, SocketChannel client) throws IOException, ClassNotFoundException {
         //invio al server
+        oos.writeObject(new String[]{"login"});
         oos.writeObject(new User(command[1],command[2]));
         //ricezione dal server
-        System.out.println("ok");
         this.resultLogin = (Login) ois.readObject();
-        System.out.println("anche dai");
         if(resultLogin.getMessage().equals("OK")){
             System.out.println("Utente: " + command[1] + " correttamente loggato");
             listUsersStatus = resultLogin.getList();
@@ -242,7 +234,10 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     }
 
     public boolean logout(String[] command) throws IOException, ClassNotFoundException {
-
+        if(command.length<2){
+            System.err.println("Serve almeno un argomento");
+            return false;
+        }
         //invio al server la richiesta di logout
         oos.writeObject(command);
         //ricezione dal server del logout
@@ -279,9 +274,14 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     public void listProjects(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
         ArrayList<Project> list= (ArrayList<Project>) ois.readObject();
-        Gson gson = new Gson();
-        String projectsJson = gson.toJson(list);
-        System.out.println(projectsJson);
+        if(list == null){
+            System.err.println("L'utente non è membro di nessun progetto");
+        }else{
+            Gson gson = new Gson();
+            String projectsJson = gson.toJson(list);
+            System.out.println(projectsJson);
+        }
+
     }
 
     public void createProject(String[] command) throws IOException, ClassNotFoundException {

@@ -47,6 +47,18 @@ public class LoggedInHandler implements Runnable {
             command = (String[]) info.getObjectInputStream().readObject();
             System.out.println("command: " + command[0]);
             switch (command[0]){
+                case "login":
+                    clientUser = (User) info.getObjectInputStream().readObject();
+                    if(SignedUpUsers.isValid(clientUser)){
+                        System.out.println("connessione accettata da: " + clientUser.getName());
+                        setClientUser(clientUser);
+                        setSignedUpUsers(SignedUpUsers);
+                    } else {
+                        System.err.println("Login non accettata da: " + clientUser.getName());
+                    }
+                    Login<UserAndStatus> resultLogin = server.login(clientUser, clientUser.getName());
+                    info.getObjectOutputStream().writeObject(resultLogin);
+                    break;
                 case "logout":
                     String resultLogout = server.logout(command[1]);
                     info.getObjectOutputStream().writeObject(resultLogout); //invio verso il client
@@ -71,39 +83,39 @@ public class LoggedInHandler implements Runnable {
                     info.getObjectOutputStream().writeObject(resultCreateProject);
                     break;
                 case "addmember":
-                    String resultCreateMember = server.addMember(command[1],command[2]);
+                    String resultCreateMember = server.addMember(command[1],command[2], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultCreateMember);
                     break;
                 case "showmembers":
-                    ToClient<String> resultShowMembers = server.showMembers(command[1]);
+                    ToClient<String> resultShowMembers = server.showMembers(command[1], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultShowMembers);
                     break;
                 case "showcards":
-                    ToClient<Card> resultShowCards = server.showCards(command[1]);
+                    ToClient<Card> resultShowCards = server.showCards(command[1], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultShowCards);
                     break;
                 case "addcard":
-                    String resultAddCard = server.addCard(command[1],command[2],command[3]);
+                    String resultAddCard = server.addCard(command[1],command[2],command[3], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultAddCard);
                     break;
                 case "movecard":
-                    String resultMoveCard = server.moveCard(command[1],command[2],command[3],command[4]);
+                    String resultMoveCard = server.moveCard(command[1],command[2],command[3],command[4], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultMoveCard);
                     break;
                 case "getcardhistory":
-                    ToClient<String> resultCardHistory = server.getCardHistory(command[1],command[2]);
+                    ToClient<String> resultCardHistory = server.getCardHistory(command[1],command[2], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultCardHistory);
                     break;
                 case "readchat":
-                    String resultReadChat = server.readChat(command[1]);
+                    String resultReadChat = server.readChat(command[1],clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultReadChat);
                     break;
                 case "sendchatmsg":
-                    String resultSendMsg = server.sendChatMsg(command[1]);
+                    String resultSendMsg = server.sendChatMsg(command[1], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultSendMsg);
                     break;
                 case "cancelproject":
-                    String resultCancelProject = server.cancelProject(command[1]);
+                    String resultCancelProject = server.cancelProject(command[1], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultCancelProject);
                     break;
             }
@@ -111,7 +123,6 @@ public class LoggedInHandler implements Runnable {
             stop = true;
             System.out.println("Disconnessione improvvisa");
         }
-
     }
 
     public ClientInfo getInfo() {
