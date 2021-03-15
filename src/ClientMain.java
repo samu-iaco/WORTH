@@ -68,17 +68,19 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                 switch (command[0].toLowerCase()){
 
                     case "register":
+                        System.out.println("hiedo rgistr");
                         register(command,registerRMI);
                         break;
                     case "login":
-
+                        System.out.println("chiedo logni");
                         if(alreadyLogged){
                             System.err.println("Un utente è gia loggato, prima si deve scollegare");
                             break;
                         }
-                        //TCPClient client = new TCPClient(new User(command[1],command[2]));
 
+                        System.out.println("qui ok");
                         boolean resultLogin = login(command,client);
+                        System.out.println("uguale");
                         if(resultLogin){
                             alreadyLogged = true;
                             System.out.println("Registrazione di " + command[1] + " alla callback");
@@ -86,7 +88,6 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         break;
                     case "logout":
-                        System.out.println("ciao");
                         boolean resultLogout = false;
                         if(alreadyLogged)
                             resultLogout = logout(command);
@@ -210,7 +211,9 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         //invio al server
         oos.writeObject(new User(command[1],command[2]));
         //ricezione dal server
+        System.out.println("ok");
         this.resultLogin = (Login) ois.readObject();
+        System.out.println("anche dai");
         if(resultLogin.getMessage().equals("OK")){
             System.out.println("Utente: " + command[1] + " correttamente loggato");
             listUsersStatus = resultLogin.getList();
@@ -244,7 +247,6 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         oos.writeObject(command);
         //ricezione dal server del logout
         String result = (String) ois.readObject();
-        System.out.println("result: " + result);
         if(result.equals("OK")){
             return true;
         }

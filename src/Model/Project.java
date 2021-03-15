@@ -26,7 +26,6 @@ public class Project implements Serializable {
     private ArrayList<String> INPROGRESS;
     private ArrayList<String> TOBEREVISITED;
     private ArrayList<String> DONE;
-    private String pathProject;
     private transient File dir; //transient per evitare la serializzazione di gson
 
 
@@ -42,8 +41,7 @@ public class Project implements Serializable {
         this.port = port;
         this.multicast = multicast;
         projectMembers.add(username);
-        this.pathProject = "./" + name;
-        this.dir = new File(pathProject);
+        dir = new File("./" + name);
         if(!dir.exists()) dir.mkdir();
     }
 
@@ -166,32 +164,30 @@ public class Project implements Serializable {
         return list;
     }
 
-    public String deleteDirectory(){
+    public void deleteDirectory(File currDir){
         String result;
-
-        String dirToDelete = "./" + name;
-        System.out.println("dir: " + dirToDelete);
+        System.out.println(currDir);
         System.out.println("ciao?");
+        System.out.println(dir);
         try{
-            String[] entries = dir.list();
-            System.out.println(Arrays.toString(entries));
-            if(entries.length!=0){
-                for(String s: entries){
-                    File currFile = new File(dir.getPath(),s);
-                    currFile.delete();
+            File[] allContents = currDir.listFiles();
+            if (allContents != null) {
+                for (File file : allContents) {
+                    System.out.println(file);
+                    deleteDirectory(file);
                 }
             }
-            if(dir.delete())
+            if(currDir.delete()){
                 result = "OK";
-            else result = "Non è stato possibile cancellare il progetto";
-            return result;
+            }else result = "c'è stato un problema";
+
+            //return result;
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
-
-        return "prova";
+        result = "Non è stato possibile cancellare il progetto";
+        //return result;
 
     }
 
@@ -272,6 +268,14 @@ public class Project implements Serializable {
 
     public void setMulticast(String multicast) {
         this.multicast = multicast;
+    }
+
+    public File getDir() {
+        return dir;
+    }
+
+    public void setDir(File dir) {
+        this.dir = dir;
     }
 
     @Override

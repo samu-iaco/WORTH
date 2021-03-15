@@ -1,5 +1,6 @@
 import Model.Card;
 import Model.Project;
+import Model.User;
 
 import java.io.IOException;
 import java.net.UnknownHostException;

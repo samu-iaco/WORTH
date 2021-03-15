@@ -17,11 +17,13 @@ public class LoggedInHandler implements Runnable {
      */
     private User clientUser;
     private SignedUpUsers SignedUpUsers;
+    RMI_register_Class register;
     private boolean stop = false;
     private TCPServer server;
     // Constructor
-    public LoggedInHandler(ClientInfo info, TCPServer server)
+    public LoggedInHandler(ClientInfo info, TCPServer server, SignedUpUsers userList)
     {
+        this.SignedUpUsers = userList;
         this.info = info;
         this.server = server;
     }

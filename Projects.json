@@ -1,28 +1,38 @@
 [
   {
-    "name": "bighello",
-    "port": 34664,
-    "multicast": "224.0.0.1",
+    "name": "bighelloagain",
+    "port": 39128,
+    "multicast": "224.0.0.3",
     "cards": [
       {
-        "description": "descrizione",
-        "name": "tasks",
+        "description": "ahah",
+        "name": "notagain",
         "cardHistory": [
-          "TODO",
-          "inprogress",
-          "done"
+          "TODO"
         ]
       }
     ],
     "projectMembers": [
       "q"
     ],
+    "TODO": [
+      "notagain"
+    ],
+    "INPROGRESS": [],
+    "TOBEREVISITED": [],
+    "DONE": []
+  },
+  {
+    "name": "porndani",
+    "port": 13832,
+    "multicast": "224.0.0.4",
+    "cards": [],
+    "projectMembers": [
+      "daniele"
+    ],
     "TODO": [],
     "INPROGRESS": [],
     "TOBEREVISITED": [],
-    "DONE": [
-      "tasks"
-    ],
-    "pathProject": "./bighello"
+    "DONE": []
   }
 ]

@@ -1,7 +1,62 @@
 [
   {
+    "name": "samuele",
+    "password": "1234",
+    "status": "offline"
+  },
+  {
+    "name": "a",
+    "password": "a",
+    "status": "offline"
+  },
+  {
+    "name": "cicciosbrinzo",
+    "password": "1",
+    "status": "online"
+  },
+  {
+    "name": "d",
+    "password": "d",
+    "status": "online"
+  },
+  {
+    "name": "e",
+    "password": "e",
+    "status": "offline"
+  },
+  {
+    "name": "f",
+    "password": "f",
+    "status": "offline"
+  },
+  {
     "name": "q",
     "password": "q",
+    "status": "offline"
+  },
+  {
+    "name": "daniele",
+    "password": "12345",
+    "status": "offline"
+  },
+  {
+    "name": "jackson",
+    "password": "martinez",
+    "status": "offline"
+  },
+  {
+    "name": "s",
+    "password": "s",
+    "status": "offline"
+  },
+  {
+    "name": "t",
+    "password": "t",
+    "status": "offline"
+  },
+  {
+    "name": "w",
+    "password": "w",
     "status": "offline"
   }
 ]
