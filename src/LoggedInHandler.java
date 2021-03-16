@@ -118,6 +118,12 @@ public class LoggedInHandler implements Runnable {
                     String resultCancelProject = server.cancelProject(command[1], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultCancelProject);
                     break;
+
+                default:
+                    String otherCommands = "Comando non valido";
+                    info.getObjectOutputStream().writeObject(otherCommands);
+                    System.out.println(otherCommands);
+                    break;
             }
         } catch (Exception e){
             stop = true;

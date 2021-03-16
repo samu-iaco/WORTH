@@ -59,7 +59,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             //Inizializzo le callbacks
             Notify_Interface obj = this;
             Notify_Interface expCallback = (Notify_Interface) UnicastRemoteObject.exportObject(obj, 0);
-
+            System.out.println("DIGITARE help PER RICEVERE ISTRUZIONI SUI COMANDI");
             while(ok){
 
                 String s = in.nextLine();
@@ -182,6 +182,15 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         }
                         cancelProject(command);
                         break;
+                    case "help":
+                        help();
+                        break;
+                    default:
+                        oos.writeObject(command);
+                        String otherCommands = (String) ois.readObject();
+                        System.out.println(otherCommands);
+                        break;
+
                 }
 
             }
@@ -451,5 +460,31 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                 if(!curr.getStatus().equals(status)) curr.setStatus(status);
             }
         if(!found) listUsersStatus.add(new UserAndStatus(userName,status));
+    }
+
+    private void help(){
+        System.out.println("---------------WORTH HELP COMMANDS---------------");
+        System.out.println("TUTTI I COMANDI DEVONO ESSERE SCRITTI IN MINUSCOLO!");
+        System.out.println("register user pass: per registrare un nuovo utente");
+        System.out.println("login user pass: per loggare un utente");
+        System.out.println("logout user: per sloggare un utente e terminare la sessione");
+        System.out.println("listusers: per consultare la lista degli utenti con il loro stato");
+        System.out.println("listonlineusers: per consultare la lista degli utenti online");
+        System.out.println("listprojects: per recuperare la lista dei progetti di cui l'utente è membro");
+        System.out.println("createproject projectName: per creare un nuovo progetto");
+        System.out.println("addmember projectName user: aggiunge al progetto un utente user");
+        System.out.println("showmembers projectName: recupera la lista degli utenti del progetto");
+        System.out.println("showcards projectName: recupera la lista delle cards del progetto");
+        System.out.println("addcard projectName cardName description: aggiunge una card con relativa" +
+                           "descrizione al progetto ");
+        System.out.println("movecard projectName cardName startList finishList: sposta la card da una " +
+                           "lista di partenza ad una lista di arrivo mantenendo i vincoli di spostamento");
+        System.out.println("getcardhistory projectName cardName: per recuperare la lista degli spostamenti " +
+                           "della card");
+        System.out.println("readchat projectName: visualizza i messaggi della chat del progetto");
+        System.out.println("sendchatmsg projectName-> messagge: per inviare un messaggio nella chat del progetto");
+        System.out.println("cancelproject projectName: cancella il progetto a patto che tutte la card " +
+                           "siano finite");
+
     }
 }

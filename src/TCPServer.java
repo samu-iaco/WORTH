@@ -320,7 +320,6 @@ public class TCPServer implements ServerInterface{
     @Override
     public String addMember(String projectName, String username , String currUsername) {
         String result = null;
-        System.out.println("currusername: " + currUsername);
 
         ArrayList<User> currDataUsers = new ArrayList<>();
         userList.getList().forEach((s,User) ->{
