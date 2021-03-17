@@ -2,6 +2,9 @@ package Model;
 
 import java.io.Serializable;
 
+/**
+ * classe per generare l'indirizzo multicast da associare al progetto
+ */
 public class MulticastGen implements Serializable {
     private int p1,p2,p3,p4;
     private String address;

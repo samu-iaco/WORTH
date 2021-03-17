@@ -1,6 +1,10 @@
 import java.io.Serializable;
 import java.util.ArrayList;
 
+/**
+ * Questa classe restituisce al client un tipo generico
+ * @param <T> tipo di oggetto da restituire
+ */
 public class ToClient<T> implements Serializable {
     private String message;
     private ArrayList<T> list;

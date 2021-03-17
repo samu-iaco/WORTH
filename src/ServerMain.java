@@ -1,4 +1,4 @@
-import Model.MulticastAddress;
+
 import Model.SignedUpProjects;
 
 import java.io.IOException;
@@ -10,13 +10,13 @@ public class ServerMain {
     private static final int PORT_RMI = 5001;
 
     /**
-     *  Questa classe astrae il file json contenente gli utenti registrati
+     *  Queste 2 classi astraggono i file json contenenti gli utenti registrati e i progetti
      */
     private static SignedUpUsers usersList = new SignedUpUsers();
 
     private static SignedUpProjects projectsList = new SignedUpProjects();
 
-    //private static MulticastAddress multicastList = new MulticastAddress();
+
 
     public static void main(String[] args) {
         try{
@@ -27,8 +27,7 @@ public class ServerMain {
             Registry registry = LocateRegistry.createRegistry(PORT_RMI);
             registry.rebind("SignUp" , server);
             //parte TCP
-            new TCPServer(usersList,projectsList);
-
+            new TCPServer(usersList,projectsList); //avvio della connessione TCP del server
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

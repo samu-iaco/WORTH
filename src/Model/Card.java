@@ -3,6 +3,9 @@ package Model;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+/**
+ * classe usata per creare una nuova card
+ */
 public class Card implements Serializable {
 
     private Card card;

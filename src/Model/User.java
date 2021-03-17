@@ -2,6 +2,9 @@ package Model;
 
 import java.io.Serializable;
 
+/**
+ * classe che crea la struttura dati dell'utente
+ */
 public class User implements Serializable {
     private String name;
     private String password;

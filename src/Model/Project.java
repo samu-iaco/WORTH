@@ -45,6 +45,11 @@ public class Project implements Serializable {
         if(!dir.exists()) dir.mkdir();
     }
 
+    /**
+     *
+     * @param username utente
+     * @return se l'utente è nel progetto oppure no
+     */
     public boolean isInProject(String username){
         for(String currUser: projectMembers){
             if(currUser.equals(username)){
@@ -54,15 +59,26 @@ public class Project implements Serializable {
         return false;
     }
 
+    /**
+     *
+     * @param username utente
+     * @return aggiunge il membro al progetto
+     */
     public boolean addMember(String username){
         return projectMembers.add(username);
     }
 
+    /**
+     *
+     * @param cardName nome della card
+     * @param description descrizione
+     * @return aggiunge la card al progetto
+     */
     public String addCard(String cardName, String description){
         if(name.isEmpty() || description.isEmpty()){
             return "Nome o descrizione della carta vuoti";
         }
-        System.out.println("cards size: " + cards.size());
+
         for(Card currCard: cards) {
             if (currCard.getName().equals(cardName)) {
                 return ("Card " + currCard.getName() + " gia esistente");
@@ -91,6 +107,13 @@ public class Project implements Serializable {
         return "OK";
     }
 
+    /**
+     *
+     * @param cardName nome della carta
+     * @param partenza lista di partenza
+     * @param arrivo lista di arrivo
+     * @return muove la card dalla lista di partenza a quella di arrivo
+     */
     public String moveCard(String cardName, String partenza, String arrivo){
         if(partenza.equals(arrivo)) return "La lista di partenza e arrivo coincidono";
         if(!partenza.equalsIgnoreCase("TODO") && !partenza.equalsIgnoreCase("TOBEREVISITED")
@@ -102,7 +125,6 @@ public class Project implements Serializable {
             if(currCard.getName().equals(cardName)){
                 //Caso in cui la card si trova in TODO
                 if(partenza.equalsIgnoreCase("TODO")){
-                    System.out.println("TODO size: " + TODO.size());
                     if(TODO.contains(currCard.getName())){
                         if(arrivo.equalsIgnoreCase("INPROGRESS")){
                             currCard.updateHistory(arrivo);
@@ -153,6 +175,11 @@ public class Project implements Serializable {
         return "OK";
     }
 
+    /**
+     *
+     * @param cardName nome della carta
+     * @return resistuisce la storia della carta
+     */
     public ArrayList<String> cardHistory(String cardName){
         ArrayList<String> list = null;
         for(Card currCard: cards){
@@ -164,6 +191,11 @@ public class Project implements Serializable {
         return list;
     }
 
+    /**
+     *
+     * @param currDir cartella da eliminare
+     * rimuove la cartella del progetto
+     */
     public void deleteDirectory(File currDir){
         String result;
         System.out.println(currDir);

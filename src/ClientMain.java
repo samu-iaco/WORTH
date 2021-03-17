@@ -1,11 +1,9 @@
 import Model.Card;
 import Model.infoMultiCastConnection;
 import Model.Project;
-import Remote.Exception.UserAlreadyExistsException;
 import Model.User;
 import com.google.gson.Gson;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -194,19 +192,20 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                 }
 
             }
-        } catch (IOException | NotBoundException | UserAlreadyExistsException | ClassNotFoundException e) {
+        } catch (IOException | NotBoundException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         System.exit(0);
     }
 
 
-    public void register(String[] command, RMI_register_Interface registerRMI) throws UserAlreadyExistsException, RemoteException {
+    public void register(String[] command, RMI_register_Interface registerRMI) throws RemoteException {
         String result = "";
         if(command.length<3) registerRMI.register("","");
         else if(command.length>3) System.out.println("Hai inserito troppi argomenti");
         else result = registerRMI.register(command[1],command[2]);
-        System.out.println(result);
+        if(result == null) System.err.println("Non è stato possibile registrare l'utente");
+        else System.out.println(result);
     }
 
     public boolean login(String[] command, SocketChannel client) throws IOException, ClassNotFoundException {
@@ -437,18 +436,6 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         }else System.err.print(result);
     }
 
-    @Override
-    public void notifyEventChat(String mAddress, int port) throws RemoteException {
-        MulticastSocket msClient;
-        try {
-            msClient = new MulticastSocket(port);
-            msClient.joinGroup(InetAddress.getByName(mAddress));
-            msClient.setSoTimeout(3000);
-            multiCastAddresses.add(new infoMultiCastConnection(msClient, port, mAddress));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void notifyEvent(String userName, String status) throws RemoteException {

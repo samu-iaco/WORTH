@@ -86,7 +86,7 @@ public class SignedUpUsers {
      * @param u l'utente da controllare
      * @return se è un utente valido o meno
      */
-    public boolean isValid(User u){//fare getUser() in User
+    public boolean isValid(User u){
         return users.containsKey(u.getName()) && users.get(u.getName()).getPassword().equals(u.getPassword());
     }
 

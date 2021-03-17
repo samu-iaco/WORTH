@@ -3,6 +3,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+/**
+ * classe usata per salvare i dati sulla connessione del client
+ */
 public class ClientInfo {
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;

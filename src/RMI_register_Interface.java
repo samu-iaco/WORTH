@@ -1,5 +1,3 @@
-import Remote.Exception.UserAlreadyExistsException;
-
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -12,7 +10,7 @@ public interface RMI_register_Interface extends Remote {
      * @throws RemoteException se ci sono problemi con l'RMI
      * @return "ok" se l'operazione ha aggiunto l'utente
      */
-    String register(String nickUtente, String password) throws RemoteException, UserAlreadyExistsException;
+    String register(String nickUtente, String password) throws RemoteException;
 
     void registerForCallback (Notify_Interface ClientInterface, String nickUtente) throws RemoteException;
 

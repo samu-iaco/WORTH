@@ -1,4 +1,3 @@
-import Remote.Exception.UserAlreadyExistsException;
 import Model.User;
 
 import java.rmi.RemoteException;
@@ -7,13 +6,16 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * classe che implementa i metodi RMI
+ */
 public class RMI_register_Class extends UnicastRemoteObject implements RMI_register_Interface {
     SignedUpUsers userList;
     private List<InfoCallback> clients;
     private ArrayList<User> dataUsers;
 
 
-    protected RMI_register_Class(SignedUpUsers userList) throws RemoteException {
+    public RMI_register_Class(SignedUpUsers userList) throws RemoteException {
         super();
         this.userList = userList;
         clients = new ArrayList<>();
@@ -26,8 +28,7 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
     }
 
     @Override
-    public synchronized String register(String nickUtente, String password) throws RemoteException, UserAlreadyExistsException {
-        System.out.println("Richiesta di registrazione da parte di: " + nickUtente);
+    public synchronized String register(String nickUtente, String password) throws RemoteException {
 
 
         if(nickUtente.isEmpty() || password.isEmpty()) {
@@ -45,7 +46,6 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
         return null;    //null se l'utente non viene registrato
     }
 
-    //Metodi RMI
 
     @Override
     public synchronized void registerForCallback (Notify_Interface ClientInterface, String nickUtente) throws RemoteException {
@@ -53,7 +53,7 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
                 .anyMatch(client -> ClientInterface.equals(client.getClient()));
         if (!contains){
             clients.add(new InfoCallback(ClientInterface,nickUtente));
-            System.out.println("CALLBACK: Aggiunto un nuovo utente." );
+            System.out.println("Aggiunto un nuovo utente alla callback");
         }
     }
 
@@ -63,7 +63,7 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
 
     private synchronized void doCallbacks(String nickName, String status) throws RemoteException {
         LinkedList<Notify_Interface> errors = new LinkedList<>();
-        System.out.println("CALLBACK: callback iniziate.");
+        System.out.println("callback iniziate.");
         for (InfoCallback callbackinfoUser : clients) {
             Notify_Interface client = callbackinfoUser.getClient();
             try {
@@ -72,11 +72,11 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
                 errors.add(client);
             }
         }
-        if(!errors.isEmpty()) {
-            System.out.println("CALLBACK: errore nella registrazione di un client");
-            for(Notify_Interface Nei : errors) unregisterForCallback(Nei);
+        if(!errors.isEmpty()) { //se c'è un errore
+            System.out.println("errore nella registrazione di un client alla callback");
+            for(Notify_Interface Ne : errors) unregisterForCallback(Ne);
         }
-        System.out.println("CALLBACK: callbacks completate.");
+        System.out.println("callbacks completate.");
     }
 
     public synchronized void unregisterForCallback(Notify_Interface Client) throws RemoteException {
@@ -86,9 +86,9 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
                 .orElse(null);
         if (user!=null) {
             clients.remove(user);
-            System.out.println("CALLBACK: client rimosso");
+            System.out.println("client rimosso dalla callback");
         }
-        else System.out.println("CALLBACK: errore durante la rimozione del client.");
+        else System.out.println("errore durante la rimozione del client dalla callback");
     }
 
 }

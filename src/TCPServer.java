@@ -12,7 +12,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class TCPServer implements ServerInterface{
     private static final int PORT_TCP = 9999;
-    private String NAME_FILE;
+    private String NAME_FILE; //file per gli indirizzi multicast
 
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
@@ -20,14 +20,12 @@ public class TCPServer implements ServerInterface{
     private ArrayList<Project> dataProjects;
     private ArrayList<MulticastGen> multicastGens;
     private ArrayList<infoMultiCastConnection> multicastAddresses;
-    private File addresses;
     private String multicastChat;
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
     SignedUpProjects projectList;
     RMI_register_Class register;
-    Login<UserAndStatus> resultLogin;
     MulticastGen multicastGen;
 
     /**
@@ -37,7 +35,7 @@ public class TCPServer implements ServerInterface{
 
 
     public TCPServer(SignedUpUsers userList, SignedUpProjects projectList) throws IOException, ClassNotFoundException {
-        serverSocket = new ServerSocket(PORT_TCP);
+        serverSocket = new ServerSocket(PORT_TCP);  //creo il socket TCP
 
         this.projectList = projectList;
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
@@ -47,14 +45,14 @@ public class TCPServer implements ServerInterface{
         this.NAME_FILE = "MulticastIP.json";
         File addresses = new File(NAME_FILE);
         this.dataUsers = new ArrayList<>();
-        userList.getList().forEach((s, user) -> {
+        userList.getList().forEach((s, user) -> {//copio il contenuto della hashmap degli utenti in un array
             synchronized (user){
                 dataUsers.add(user);
             }
         });
 
         this.dataProjects = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
+        projectList.getList().forEach((s,Project) ->{//copio il contenuto della hashmap dei progetti in un array
             synchronized (Project){
                 dataProjects.add(Project);
             }
@@ -102,10 +100,10 @@ public class TCPServer implements ServerInterface{
 
             // Apro gli stream di Input e Output verso il socket
             ois = new ObjectInputStream(sock.getInputStream());
-            //DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
+
             oos = new ObjectOutputStream(sock.getOutputStream());
-            // Ottengo le informazioni di login dal socket
-            //User clientUser = (User) ois.readObject();
+
+
 
             //creo l'oggetto che descrive le informazioni sulla connessione del client
             ClientInfo clientInfo = new ClientInfo();
@@ -115,11 +113,11 @@ public class TCPServer implements ServerInterface{
             clientInfo.setSocket(sock);
 
             LoggedInHandler client = new LoggedInHandler(clientInfo, this, this.userList);
-            executor.execute(client);
+            executor.execute(client); //avvio il thread
 
-            //this.currUsername = clientUser.getName();
+
             register = new RMI_register_Class(userList);
-            //resultLogin = login(clientUser);
+
         }
     }
 
@@ -156,7 +154,7 @@ public class TCPServer implements ServerInterface{
                         tmp = true;
                         currUser.setStatus("online");
                         register.update(currUser.getName(),"online");
-                        for(Project currProject : currDataProject) { //Multicast info of projects that user is member
+                        for(Project currProject : currDataProject) {
                             if (currProject.isInProject(currUsername))
                                 multicast.add(new infoMultiCastConnection(null, currProject.getPort(), currProject.getMulticast()));
                         }
@@ -359,10 +357,10 @@ public class TCPServer implements ServerInterface{
                     result = "L'utente non è un membro del progetto";
                     return result;
                 }
-            }else result = "Non esiste un progetto con questo nome";
+            }
         }
 
-        return result;
+        return "Non esiste un progetto con questo nome";
 
     }
 
@@ -424,7 +422,7 @@ public class TCPServer implements ServerInterface{
 
     @Override
     public String addCard(String projectName, String cardName, String description,String currUsername) {
-        String result = "Problemi nell'aggiunta nella card";
+        String result;
 
         ArrayList<Project> currData = new ArrayList<>();
         projectList.getList().forEach((s,Project) ->{
@@ -438,11 +436,11 @@ public class TCPServer implements ServerInterface{
                 if(currProject.getProjectMembers().contains(currUsername)){
                     result = currProject.addCard(cardName,description);
                     projectList.store();
-                }else result = "L'utente non è un membro del progetto";
-            else result = "non esiste un progetto con questo nome";
+                    return result;
+                }else return "L'utente non è un membro del progetto";
         }
 
-        return result;
+        return "non esiste un progetto con questo nome";
     }
 
     @Override
@@ -461,11 +459,11 @@ public class TCPServer implements ServerInterface{
                 if(currProject.getProjectMembers().contains(currUsername)){
                     result = currProject.moveCard(cardName,partenza,arrivo);
                     projectList.store();
-                }else result = "L'utente non è un membro del progetto";
-            else result = "non esiste un progetto con questo nome";
+                    return result;
+                }else return "L'utente non è un membro del progetto";
         }
 
-        return result;
+        return "non esiste un progetto con questo nome";
     }
 
     @Override
@@ -485,8 +483,15 @@ public class TCPServer implements ServerInterface{
                 if(currProject.getProjectMembers().contains(currUsername)){
                     list = currProject.cardHistory(cardName);
                     result = "OK";
-                }else result = "L'utente non è un membro del progetto";
-            else result = "non esiste un progetto con questo nome";
+                    return new ToClient<>(result,list);
+                }else {
+                    result = "L'utente non è un membro del progetto";
+                    return new ToClient<>(result,null);
+                }
+            else {
+                result = "non esiste un progetto con questo nome";
+                return new ToClient<>(result,null);
+            }
         }
 
         return new ToClient<>(result,list);
@@ -505,15 +510,14 @@ public class TCPServer implements ServerInterface{
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
-                if(currProject.getProjectMembers().contains(currUsername)){
+                if((currProject.getProjectMembers().contains(currUsername))){
                     this.multicastChat = currProject.getMulticast();
-                    result = ("OK"+multicastChat);
-                    System.out.println("result send chat: " + result);
-                }else result = "L'utente non è un membro del progetto";
-            else result = "non esiste un progetto con questo nome";
+                    result = ("OK"+multicastChat); //concateno alla risposta anche l'indirizzo multicast
+                    return result;
+                }else return "L'utente non è un membro del progetto";
         }
 
-        return result;
+        return "non esiste un progetto con questo nome";
     }
 
     @Override
@@ -531,12 +535,12 @@ public class TCPServer implements ServerInterface{
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
                     this.multicastChat = currProject.getMulticast();
-                    result = ("OK"+multicastChat);
-                }else result = "L'utente non è un membro del progetto";
-            else result = "non esiste un progetto con questo nome";
+                    return ("OK"+multicastChat);
+                }else return "L'utente non è un membro del progetto";
+
         }
 
-        return result;
+        return "non esiste un progetto con questo nome";
     }
 
     @Override
@@ -562,7 +566,6 @@ public class TCPServer implements ServerInterface{
                         projectList.store();
                         currProject.deleteDirectory(new File(("./" + currProject.getName())));
 
-                        //System.out.println("result delete: " + result);
                         //aggiorno il multicast
                         infoMultiCastConnection mserverLeave = null;
                         for(infoMultiCastConnection info: multicastAddresses){
@@ -579,21 +582,19 @@ public class TCPServer implements ServerInterface{
                             }
                         }
                         if(mserverLeave!=null) multicastAddresses.remove(mserverLeave);
-                        result = "OK";
-                        return result;
+                        return "OK";
 
-                    }else result = "Ci sono delle card che non sono terminate";
+                    }else return  "Ci sono delle card che non sono terminate";
 
-                }else result = "L'utente non è un membro del progetto";
-            else result = "non esiste un progetto con questo nome";
+                }else return "L'utente non è un membro del progetto";
         }
 
-        return result;
+        return "non esiste un progetto con questo nome";
     }
 
     public synchronized void searchFile(){
         try{
-            //apro il file e lo leggo
+            //apro il file degli indirizzi multicast e lo leggo
             FileInputStream fis = new FileInputStream(NAME_FILE);
             InputStreamReader in = new InputStreamReader(fis);
             MulticastGen[] dataArray = new Gson().fromJson(in,MulticastGen[].class);
@@ -606,7 +607,7 @@ public class TCPServer implements ServerInterface{
 
     }
 
-
+    //metodo usato per salvare sul file multicast
     public synchronized void storeMulticast(MulticastGen mip){
         try {
             FileOutputStream fos = new FileOutputStream(NAME_FILE);
