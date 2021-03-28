@@ -1,0 +1,27 @@
+[
+  {
+    "name": "q",
+    "password": "q",
+    "status": "offline"
+  },
+  {
+    "name": "samuele",
+    "password": "1234",
+    "status": "offline"
+  },
+  {
+    "name": "casd",
+    "password": "dfc",
+    "status": "offline"
+  },
+  {
+    "name": "dx",
+    "password": "fv",
+    "status": "offline"
+  },
+  {
+    "name": "mario",
+    "password": "12345",
+    "status": "offline"
+  }
+]

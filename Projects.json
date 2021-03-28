@@ -1,0 +1,27 @@
+[
+  {
+    "name": "ciao",
+    "port": 25470,
+    "multicast": "224.0.0.1",
+    "cards": [
+      {
+        "description": "descriprion",
+        "name": "task",
+        "cardHistory": [
+          "TODO",
+          "inprogress"
+        ]
+      }
+    ],
+    "projectMembers": [
+      "q",
+      "samuele"
+    ],
+    "TODO": [],
+    "INPROGRESS": [
+      "task"
+    ],
+    "TOBEREVISITED": [],
+    "DONE": []
+  }
+]

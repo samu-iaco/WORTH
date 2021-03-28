@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.*;
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -114,6 +115,7 @@ public class TCPServer implements ServerInterface{
 
             LoggedInHandler client = new LoggedInHandler(clientInfo, this, this.userList);
             executor.execute(client); //avvio il thread
+            System.out.println("costruttore TCPServer " + Thread.currentThread().getName());
 
 
             register = new RMI_register_Class(userList);
@@ -124,6 +126,7 @@ public class TCPServer implements ServerInterface{
 
     public synchronized Login<UserAndStatus> login(User u, String currUsername) throws RemoteException {
         String result = null;
+
         ArrayList<UserAndStatus> list = new ArrayList<>();
         Login<UserAndStatus> login;
         ArrayList<infoMultiCastConnection> multicast = new ArrayList<>();
@@ -179,7 +182,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String logout(String nickName) throws RemoteException {
+    public synchronized String logout(String nickName) throws RemoteException {
 
         if(nickName.isEmpty()){
             return  "Nome utente vuoto";
@@ -188,12 +191,32 @@ public class TCPServer implements ServerInterface{
         String result = null;
         boolean finish = false;
 
-        ArrayList<User> currData = new ArrayList<>();
+        /*
         userList.getList().forEach((s,User) ->{
             synchronized (User){
                 currData.add(User);
             }
         });
+         */
+
+        ConcurrentHashMap<String,User> map = userList.getList();
+        /*
+        for(Map.Entry<String, User> u : map.entrySet()) {
+            System.out.println(u.getValue().getName());
+            if(u.getValue().getStatus().equals("online")){
+                System.out.println("ciao");
+                register.update(nickName,"offline");
+                u.getValue().setStatus("offline");
+                result="OK";
+                return result;
+            }
+        }
+        CAPIRE E SPIEGARE COME RENDERE CONSISTENTE MOVECARD
+         */
+
+
+        Collection<User> values = map.values();
+        ArrayList<User> currData = new ArrayList<>(values);
 
         if(dataUsers.isEmpty()) result = "Nessun utente registrato";
         for(User currUser: currData){
@@ -213,7 +236,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public ArrayList<UserAndStatus> listUsers(){
+    public synchronized ArrayList<UserAndStatus> listUsers(){
         ArrayList<UserAndStatus> list = new ArrayList<>();
 
         ArrayList<User> currData = new ArrayList<>();
@@ -230,7 +253,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public ArrayList<UserAndStatus> listOnlineusers() {
+    public synchronized ArrayList<UserAndStatus> listOnlineusers() {
         ArrayList<UserAndStatus> list = new ArrayList<>();
 
         ArrayList<User> currData = new ArrayList<>();
@@ -250,7 +273,7 @@ public class TCPServer implements ServerInterface{
 
 
     @Override
-    public ArrayList<Project> listProjects(String username) {
+    public synchronized ArrayList<Project> listProjects(String username) {
         ArrayList<Project> list = new ArrayList<>();
 
         ArrayList<Project> currData = new ArrayList<>();
@@ -273,7 +296,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String createProject(String projectName, String username) {
+    public synchronized String createProject(String projectName, String username) {
         if(projectName.isEmpty()) {
             System.err.println("Il nome del progetto non puo essere vuoto");
             return "Nome progetto vuoto";
@@ -316,7 +339,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String addMember(String projectName, String username , String currUsername) {
+    public synchronized String addMember(String projectName, String username , String currUsername) {
         String result = null;
 
         ArrayList<User> currDataUsers = new ArrayList<>();
@@ -365,7 +388,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public ToClient<String> showMembers(String projectName, String currUsername) {
+    public synchronized ToClient<String> showMembers(String projectName, String currUsername) {
         ArrayList<String> list = null;
         String result = null;
         System.out.println("project" + projectName);
@@ -393,7 +416,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public ToClient<Card> showCards(String projectName,String currUsername) {
+    public synchronized ToClient<Card> showCards(String projectName,String currUsername) {
         String result = null;
         ArrayList<Card> list = null;
 
@@ -421,7 +444,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String addCard(String projectName, String cardName, String description,String currUsername) {
+    public synchronized String addCard(String projectName, String cardName, String description,String currUsername) {
         String result;
 
         ArrayList<Project> currData = new ArrayList<>();
@@ -444,9 +467,9 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String moveCard(String projectName, String cardName, String partenza, String arrivo,String currUsername) {
+    public synchronized String moveCard(String projectName, String cardName, String partenza, String arrivo,String currUsername) {
         String result = null;
-
+        System.out.println("move " + Thread.currentThread().getName());
         ArrayList<Project> currData = new ArrayList<>();
         projectList.getList().forEach((s,Project) ->{
             synchronized (Project){
@@ -467,7 +490,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public ToClient<String> getCardHistory(String projectName, String cardName,String currUsername) {
+    public synchronized ToClient<String> getCardHistory(String projectName, String cardName,String currUsername) {
         ArrayList<String> list = null;
         String result = null;
 
@@ -498,7 +521,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String sendChatMsg(String projectName,String currUsername) {
+    public synchronized String sendChatMsg(String projectName,String currUsername) {
         String result = null;
 
         ArrayList<Project> currData = new ArrayList<>();
@@ -521,7 +544,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String readChat(String projectName, String currUsername) {
+    public synchronized String readChat(String projectName, String currUsername) {
         String result = null;
 
         ArrayList<Project> currData = new ArrayList<>();
@@ -544,7 +567,7 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public String cancelProject(String projectName, String currUsername) throws IOException {
+    public synchronized String cancelProject(String projectName, String currUsername) throws IOException {
         String result = null;
         int countCards = 0;
 
@@ -576,7 +599,6 @@ public class TCPServer implements ServerInterface{
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
-                                //info.getMulticastsocket().leaveGroup(InetAddress.getByName(currProject.getMulticast()));
 
 
                             }

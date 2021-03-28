@@ -33,6 +33,7 @@ public class LoggedInHandler implements Runnable {
         try {
             while (!stop) {
                 //Aspetto che mi arrivi un nuovo Object dal client
+
                 start();
             }
         }catch (Exception e){
@@ -41,9 +42,10 @@ public class LoggedInHandler implements Runnable {
         }
     }
 
-    public synchronized void start() {
+    public void start() {
         String[] command;
         try{
+            System.out.println("run " + Thread.currentThread().getName());
             command = (String[]) info.getObjectInputStream().readObject();
             System.out.println("command: " + command[0]);
             switch (command[0]){

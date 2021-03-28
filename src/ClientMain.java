@@ -17,6 +17,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Scanner;
 
 public class ClientMain extends RemoteObject implements Notify_Interface{
@@ -56,6 +57,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             Scanner in = new Scanner(System.in);
             //Inizializzo le callbacks
             Notify_Interface obj = this;
+            //definisce l'oggetto remoto i cui riferimenti sono validi solo mentre il server è attivo
             Notify_Interface expCallback = (Notify_Interface) UnicastRemoteObject.exportObject(obj, 0);
             System.out.println("DIGITARE help PER RICEVERE ISTRUZIONI SUI COMANDI");
             while(ok){

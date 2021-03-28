@@ -29,8 +29,7 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
 
     @Override
     public synchronized String register(String nickUtente, String password) throws RemoteException {
-
-
+        System.out.println(Thread.currentThread().getName());
         if(nickUtente.isEmpty() || password.isEmpty()) {
             System.err.println("Il nome utente o la password non possono essere vuoti");
             throw new IllegalArgumentException("Nome utente o password vuoti");
@@ -63,7 +62,7 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
 
     private synchronized void doCallbacks(String nickName, String status) throws RemoteException {
         LinkedList<Notify_Interface> errors = new LinkedList<>();
-        System.out.println("callback iniziate.");
+        System.out.println("callback iniziate");
         for (InfoCallback callbackinfoUser : clients) {
             Notify_Interface client = callbackinfoUser.getClient();
             try {
@@ -76,7 +75,7 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
             System.out.println("errore nella registrazione di un client alla callback");
             for(Notify_Interface Ne : errors) unregisterForCallback(Ne);
         }
-        System.out.println("callbacks completate.");
+        System.out.println("callbacks completate");
     }
 
     public synchronized void unregisterForCallback(Notify_Interface Client) throws RemoteException {
