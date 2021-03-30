@@ -312,8 +312,8 @@ public class Project implements Serializable {
 
     @Override
     public String toString() {
-        return "Progetto{ " +
-                "Nome: " + name + '\'' +
+        return "Progetto{" +
+                name + '\'' +
                  + '\'' +
                 '}';
     }

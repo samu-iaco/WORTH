@@ -45,19 +45,26 @@ public class TCPServer implements ServerInterface{
         this.multicastAddresses = new ArrayList<>();
         this.NAME_FILE = "MulticastIP.json";
         File addresses = new File(NAME_FILE);
-        this.dataUsers = new ArrayList<>();
-        userList.getList().forEach((s, user) -> {//copio il contenuto della hashmap degli utenti in un array
+        //this.dataUsers = new ArrayList<>();
+        /*userList.getList().forEach((s, user) -> {//copio il contenuto della hashmap degli utenti in un array
             synchronized (user){
                 dataUsers.add(user);
             }
         });
 
-        this.dataProjects = new ArrayList<>();
+         */
+
+        /*
         projectList.getList().forEach((s,Project) ->{//copio il contenuto della hashmap dei progetti in un array
             synchronized (Project){
                 dataProjects.add(Project);
             }
         });
+
+         */
+        ConcurrentHashMap<String,Project> map = projectList.getList();
+        Collection<Project> values = map.values();
+        this.dataProjects = new ArrayList<>(values);
 
         //Per ogni progetto controllo le informazioni per il multicast
         int projectPort;
@@ -134,12 +141,15 @@ public class TCPServer implements ServerInterface{
             result = "Nome utente o password vuoti";
         }
 
-        ArrayList<Project> currDataProject = new ArrayList<>();
+        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
+        ConcurrentHashMap<String,User> userMap = userList.getList();
+        /*ArrayList<Project> currDataProject = new ArrayList<>();
         projectList.getList().forEach((s,Project) ->{
             synchronized (Project){
                 currDataProject.add(Project);
             }
         });
+
 
         ArrayList<User> currDataUser = new ArrayList<>();
         userList.getList().forEach((s,User) ->{
@@ -148,7 +158,39 @@ public class TCPServer implements ServerInterface{
             }
         });
 
+         */
+
         boolean tmp = false;
+        for(Map.Entry<String, User> user : userMap.entrySet()) {
+            User currUser = user.getValue();
+            if(currUser.getName().equals(u.getName()))
+                if(currUser.getPassword().equals(u.getPassword())){
+                    if(currUser.getStatus().equals("offline")){
+                        tmp = true;
+                        currUser.setStatus("online");
+                        register.update(currUser.getName(), "online");
+                        for(Map.Entry<String, Project> project : projectMap.entrySet()) {
+                            Project currProject = project.getValue();
+                            if(currProject.isInProject(currUsername))
+                                multicast.add(new infoMultiCastConnection(null, currProject.getPort(), currProject.getMulticast()));
+                        }
+                    } else result = "Utente gia loggato";
+                } else result = "Password errata";
+
+            list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
+        }
+        if(!tmp && result == null){
+            result = "Utente non registrato nel sistema";
+        }
+
+        if(tmp){
+            login = new Login<>("OK", list,multicast);
+        }
+        else {
+            login = new Login<>(result,null,multicast);
+        }
+
+        /*
         if(currDataUser.isEmpty()) result = "Nessun utente registrato";
         for(User currUser: currDataUser){
             if(u.getName().equals(currUser.getName()))
@@ -166,55 +208,43 @@ public class TCPServer implements ServerInterface{
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
         }
 
+         */
 
-        if(!tmp && result == null){
-            result = "Utente non registrato nel sistema";
-        }
-
-        if(tmp){
-            login = new Login<>("OK", list,multicast);
-        }
-        else {
-            login = new Login<>(result,null,multicast);
-        }
 
         return login;
     }
 
     @Override
-    public synchronized String logout(String nickName) throws RemoteException {
+    public synchronized String logout(String nickName , String currUsername) throws RemoteException {
 
         if(nickName.isEmpty()){
             return  "Nome utente vuoto";
         }
 
-        String result = null;
-        boolean finish = false;
-
-        /*
-        userList.getList().forEach((s,User) ->{
-            synchronized (User){
-                currData.add(User);
-            }
-        });
-         */
-
+        String result;
         ConcurrentHashMap<String,User> map = userList.getList();
-        /*
+
         for(Map.Entry<String, User> u : map.entrySet()) {
-            System.out.println(u.getValue().getName());
-            if(u.getValue().getStatus().equals("online")){
-                System.out.println("ciao");
-                register.update(nickName,"offline");
-                u.getValue().setStatus("offline");
-                result="OK";
-                return result;
+            User currUser = u.getValue();
+            System.out.println("currUser: " + currUser.getName());
+
+            if(currUser.getName().equals(currUsername)){
+                if(currUser.getName().equals(nickName))
+                    if(currUser.getStatus().equals("online")){
+                        register.update(nickName,"offline");
+                        currUser.setStatus("offline");
+                        return "OK";
+                    }
+                    else return "L'utente non è online";
+                if(currUser.getStatus().equals("online"))
+                    return "Stai cercando di disconnettere un altro utente";
             }
         }
-        CAPIRE E SPIEGARE COME RENDERE CONSISTENTE MOVECARD
-         */
 
 
+        return "L'utente non è registrato";
+
+        /*
         Collection<User> values = map.values();
         ArrayList<User> currData = new ArrayList<>(values);
 
@@ -233,18 +263,19 @@ public class TCPServer implements ServerInterface{
             result = "L'utente non è registrato nel sistema";
             return result;
         }
+
+
+         */
+
     }
 
     @Override
     public synchronized ArrayList<UserAndStatus> listUsers(){
         ArrayList<UserAndStatus> list = new ArrayList<>();
 
-        ArrayList<User> currData = new ArrayList<>();
-        userList.getList().forEach((s,User) ->{
-            synchronized (User){
-                currData.add(User);
-            }
-        });
+        ConcurrentHashMap<String,User> map = userList.getList();
+        Collection<User> values = map.values();
+        ArrayList<User> currData = new ArrayList<>(values);
 
         for(User currUser: currData){
             list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
@@ -256,12 +287,9 @@ public class TCPServer implements ServerInterface{
     public synchronized ArrayList<UserAndStatus> listOnlineusers() {
         ArrayList<UserAndStatus> list = new ArrayList<>();
 
-        ArrayList<User> currData = new ArrayList<>();
-        userList.getList().forEach((s,User) ->{
-            synchronized (User){
-                currData.add(User);
-            }
-        });
+        ConcurrentHashMap<String,User> map = userList.getList();
+        Collection<User> values = map.values();
+        ArrayList<User> currData = new ArrayList<>(values);
 
         for(User currUser: currData){
             if(currUser.getStatus().equals("online"))
@@ -276,13 +304,9 @@ public class TCPServer implements ServerInterface{
     public synchronized ArrayList<Project> listProjects(String username) {
         ArrayList<Project> list = new ArrayList<>();
 
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
-
+        ConcurrentHashMap<String,Project> map = projectList.getList();
+        Collection<Project> values = map.values();
+        ArrayList<Project> currData  = new ArrayList<>(values);
 
         if(currData.isEmpty()) return null;
         for(Project currProject: currData){
@@ -302,12 +326,9 @@ public class TCPServer implements ServerInterface{
             return "Nome progetto vuoto";
         }
 
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
+        ConcurrentHashMap<String,Project> map = projectList.getList();
+        Collection<Project> values = map.values();
+        ArrayList<Project> currData  = new ArrayList<>(values);
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName)){
@@ -340,8 +361,9 @@ public class TCPServer implements ServerInterface{
 
     @Override
     public synchronized String addMember(String projectName, String username , String currUsername) {
-        String result = null;
+        String result;
 
+        /*
         ArrayList<User> currDataUsers = new ArrayList<>();
         userList.getList().forEach((s,User) ->{
             synchronized (User){
@@ -356,14 +378,40 @@ public class TCPServer implements ServerInterface{
             }
         });
 
+         */
+
+        ConcurrentHashMap<String,User> userMap = userList.getList();
+        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
+
         boolean userExist = false;
-        for(User currUser: currDataUsers){
+
+        Collection<User> values = userMap.values();
+        ArrayList<User> currData = new ArrayList<>(values);
+
+        for(User currUser: currData){
             if(currUser.getName().equals(username)){
                 userExist = true;
+                break;
             }
         }
-        if(!userExist) return "L'utente che vuoi aggiungere non esiste";
 
+
+        if(!userExist) return "L'utente che vuoi aggiungere non esiste";
+        for(Map.Entry<String, Project> project : projectMap.entrySet()) {
+            Project currProject = project.getValue();
+            if(currProject.getName().equals(projectName)){
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    if(!(currProject.isInProject(username))){
+                        currProject.addMember(username);
+                        projectList.store();
+                        return "OK";
+                    }else return "L'utente è gia presente nel progetto";
+                }else return "L'utente non è un membro del progetto";
+            }
+        }
+
+
+        /*
         for(Project currProject: currDataProject){
             if(currProject.getName().equals(projectName)) {
                 if (currProject.getProjectMembers().contains(currUsername)) {
@@ -382,6 +430,7 @@ public class TCPServer implements ServerInterface{
                 }
             }
         }
+         */
 
         return "Non esiste un progetto con questo nome";
 
@@ -391,13 +440,10 @@ public class TCPServer implements ServerInterface{
     public synchronized ToClient<String> showMembers(String projectName, String currUsername) {
         ArrayList<String> list = null;
         String result = null;
-        System.out.println("project" + projectName);
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
+
+        ConcurrentHashMap<String,Project> map = projectList.getList();
+        Collection<Project> values = map.values();
+        ArrayList<Project> currData  = new ArrayList<>(values);
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
@@ -407,12 +453,12 @@ public class TCPServer implements ServerInterface{
                     return new ToClient<>(result,list);
                 }else {
                     result = "L'utente non è un membro del progetto";
-                    return new ToClient<>(result,list);
+                    return new ToClient<>(result,null);
                 }
             else result = "Non esiste un progetto con questo nome";
         }
 
-        return new ToClient<>(result,list);
+        return new ToClient<>(result,null);
     }
 
     @Override
@@ -420,12 +466,11 @@ public class TCPServer implements ServerInterface{
         String result = null;
         ArrayList<Card> list = null;
 
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
+        ConcurrentHashMap<String,Project> map = projectList.getList();
+
+        /*
+        Collection<Project> values = map.values();
+        ArrayList<Project> currData  = new ArrayList<>(values);
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
@@ -440,20 +485,40 @@ public class TCPServer implements ServerInterface{
             else result = "Non esiste un progetto con questo nome";
         }
 
-        return new ToClient<>(result, list);
+         */
+
+        for(Map.Entry<String, Project> project : map.entrySet()) {
+            Project currProject = project.getValue();
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    list = currProject.getCards();
+                    result = "OK";
+                    return new ToClient<>(result, list);
+                }else {
+                    result = "L'utente non è un membro del progetto";
+                    return new ToClient<>(result, null);
+                }
+            else result = "Non esiste un progetto con questo nome";
+        }
+        return new ToClient<>(result, null);
     }
 
     @Override
     public synchronized String addCard(String projectName, String cardName, String description,String currUsername) {
         String result;
 
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
+        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
+        for(Map.Entry<String, Project> project : projectMap.entrySet()) {
+            Project currProject = project.getValue();
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    result = currProject.addCard(cardName,description);
+                    projectList.store();
+                    return result;
+                }else return "L'utente non è un membro del progetto";
+        }
 
+        /*
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
@@ -463,20 +528,35 @@ public class TCPServer implements ServerInterface{
                 }else return "L'utente non è un membro del progetto";
         }
 
+         */
+
         return "non esiste un progetto con questo nome";
     }
 
     @Override
     public synchronized String moveCard(String projectName, String cardName, String partenza, String arrivo,String currUsername) {
-        String result = null;
+        String result;
         System.out.println("move " + Thread.currentThread().getName());
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
 
+        /*try{
+            Thread.sleep(8000);
+        } catch (InterruptedException exception) {
+            exception.printStackTrace();
+        }
+
+         */
+        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
+        for(Map.Entry<String, Project> project : projectMap.entrySet()) {
+            Project currProject = project.getValue();
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    result = currProject.moveCard(cardName,partenza,arrivo);
+                    projectList.store();
+                    return result;
+                }else return "L'utente non è un membro del progetto";
+        }
+
+        /*
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
@@ -485,6 +565,7 @@ public class TCPServer implements ServerInterface{
                     return result;
                 }else return "L'utente non è un membro del progetto";
         }
+         */
 
         return "non esiste un progetto con questo nome";
     }

@@ -49,4 +49,6 @@ public class Card implements Serializable {
     public void setCardHistory(ArrayList<String> cardHistory) {
         this.cardHistory = cardHistory;
     }
+
+
 }

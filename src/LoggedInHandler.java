@@ -62,9 +62,11 @@ public class LoggedInHandler implements Runnable {
                     info.getObjectOutputStream().writeObject(resultLogin);
                     break;
                 case "logout":
-                    String resultLogout = server.logout(command[1]);
+                    String resultLogout = server.logout(command[1], clientUser.getName());
                     info.getObjectOutputStream().writeObject(resultLogout); //invio verso il client
                     break;
+
+
                 case "listusers":
                     ArrayList<UserAndStatus> listToClient;
                     listToClient = server.listUsers();
@@ -93,16 +95,50 @@ public class LoggedInHandler implements Runnable {
                     info.getObjectOutputStream().writeObject(resultShowMembers);
                     break;
                 case "showcards":
-                    ToClient<Card> resultShowCards = server.showCards(command[1], clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultShowCards);
+                    ToClient<Card> resultShowCards = new ToClient<>("",null);
+                    if(command.length>2){
+                        resultShowCards.setMessage("Hai inserito troppi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultShowCards);
+                    }
+                    else if(command.length<2){
+                        resultShowCards.setMessage("Hai inserito pochi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultShowCards);
+                    }
+                    else{
+                        resultShowCards = server.showCards(command[1], clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultShowCards);
+                    }
+
                     break;
                 case "addcard":
-                    String resultAddCard = server.addCard(command[1],command[2],command[3], clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultAddCard);
+                    String resultAddCard;
+                    if(command.length>4){
+                        resultAddCard = "hai inserito troppi argomenti per questo comando";
+                        info.getObjectOutputStream().writeObject(resultAddCard);
+                    }
+                    else if(command.length<4) {
+                        resultAddCard = "hai inserito pochi argomenti per questo comando";
+                        info.getObjectOutputStream().writeObject(resultAddCard);
+                    }
+                    else{
+                        resultAddCard = server.addCard(command[1],command[2],command[3], clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultAddCard);
+                    }
                     break;
                 case "movecard":
-                    String resultMoveCard = server.moveCard(command[1],command[2],command[3],command[4], clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultMoveCard);
+                    String resultMoveCard;
+                    if(command.length>5) {
+                        resultMoveCard = "hai inserito troppi argomenti per questo comando";
+                        info.getObjectOutputStream().writeObject(resultMoveCard);
+                    }
+                    else if(command.length<5) {
+                        resultMoveCard = "hai inserito pochi argomenti per questo comando";
+                        info.getObjectOutputStream().writeObject(resultMoveCard);
+                    }
+                    else {
+                        resultMoveCard = server.moveCard(command[1], command[2], command[3], command[4], clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultMoveCard);
+                    }
                     break;
                 case "getcardhistory":
                     ToClient<String> resultCardHistory = server.getCardHistory(command[1],command[2], clientUser.getName());

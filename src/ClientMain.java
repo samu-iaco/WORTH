@@ -3,10 +3,10 @@ import Model.infoMultiCastConnection;
 import Model.Project;
 import Model.User;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
+import java.lang.reflect.Type;
 import java.net.*;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -16,9 +16,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Scanner;
+import java.util.*;
 
 public class ClientMain extends RemoteObject implements Notify_Interface{
     private static final int PORT_RMI = 5001;
@@ -255,7 +253,10 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         if(result.equals("OK")){
             return true;
         }
-        else return false;
+        else {
+            System.err.println(result);
+            return false;
+        }
     }
 
     public void listusers(String[] command) throws IOException, ClassNotFoundException {
@@ -287,9 +288,9 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         if(list == null){
             System.err.println("L'utente non è membro di nessun progetto");
         }else{
-            Gson gson = new Gson();
-            String projectsJson = gson.toJson(list);
-            System.out.println(projectsJson);
+            System.out.println("Progetti di cui l'utente fa parte: ");
+            for(Project currProject: list)
+                System.out.println(currProject.getName());
         }
 
     }
@@ -333,10 +334,11 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         ToClient<Card> result = (ToClient<Card>) ois.readObject();
 
         if(result.getMessage().equals("OK")){
-            Gson gson = new Gson();
-            System.out.print("Cards: ");
-            String cardsGson = gson.toJson(result.getList());
-            System.out.println(cardsGson);
+            for(Card currCard: result.getList()){
+                System.out.println("Card: " +currCard.getName());
+                System.out.println("Descrizione: " + currCard.getDescription());
+                System.out.println("History: " + currCard.getCardHistory());
+            }
         }else System.err.println(result.getMessage());
     }
 
