@@ -2,11 +2,8 @@ import Model.Card;
 import Model.infoMultiCastConnection;
 import Model.Project;
 import Model.User;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
-import java.lang.reflect.Type;
 import java.net.*;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -25,11 +22,11 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     private SocketChannel client;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
-    private Login<UserAndStatus> resultLogin;
     boolean alreadyLogged = false;
 
     private ArrayList<UserAndStatus> listUsersStatus;
     private ArrayList<infoMultiCastConnection> multiCastAddresses;
+
 
     public static void main(String[] args){
         ClientMain clientMain = new ClientMain();
@@ -57,6 +54,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             Notify_Interface obj = this;
             //definisce l'oggetto remoto i cui riferimenti sono validi solo mentre il server è attivo
             Notify_Interface expCallback = (Notify_Interface) UnicastRemoteObject.exportObject(obj, 0);
+
             System.out.println("DIGITARE help PER RICEVERE ISTRUZIONI SUI COMANDI");
             while(ok){
 
@@ -67,15 +65,25 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                         register(command,registerRMI);
                         break;
                     case "login":
-                        if(alreadyLogged){
-                            System.err.println("Un utente è gia loggato, prima si deve scollegare");
+                        if(command.length > 3){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        boolean resultLogin = login(command,client);
-                        if(resultLogin){
-                            alreadyLogged = true;
-                            System.out.println("Registrazione di " + command[1] + " alla callback");
-                            registerRMI.registerForCallback(expCallback,command[1]);
+                        else if(command.length < 3){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else{
+                            if(alreadyLogged){
+                                System.err.println("Un utente è gia loggato, prima si deve scollegare");
+                                break;
+                            }
+                            boolean resultLogin = login(command,client);
+                            if(resultLogin){
+                                alreadyLogged = true;
+                                System.out.println("Registrazione di " + command[1] + " alla callback");
+                                registerRMI.registerForCallback(expCallback,command[1]);
+                            }
                         }
                         break;
                     case "logout":
@@ -213,7 +221,8 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         oos.writeObject(new String[]{"login"});
         oos.writeObject(new User(command[1],command[2]));
         //ricezione dal server
-        this.resultLogin = (Login) ois.readObject();
+        Login<UserAndStatus> resultLogin = (Login<UserAndStatus>) ois.readObject();
+
         if(resultLogin.getMessage().equals("OK")){
             System.out.println("Utente: " + command[1] + " correttamente loggato");
             listUsersStatus = resultLogin.getList();
@@ -244,6 +253,10 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     public boolean logout(String[] command) throws IOException, ClassNotFoundException {
         if(command.length<2){
             System.err.println("Serve almeno un argomento");
+            return false;
+        }
+        if(command.length > 2){
+            System.err.println("Hai inserito troppi argomenti");
             return false;
         }
         //invio al server la richiesta di logout
@@ -298,12 +311,21 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     public void createProject(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
 
-        String result = (String) ois.readObject();
+        ToClientProject result = (ToClientProject) ois.readObject();
 
-        if(result.equals("OK")){
-            System.out.println("Progetto: " + command[1] + " creato");
-        }else
-            System.err.println(result);
+        if(result.getMessage().equals("OK")){
+            try{
+                MulticastSocket mTemp = new MulticastSocket(result.getProject().getPort());
+                mTemp.joinGroup(InetAddress.getByName(result.getProject().getMulticast()));
+                multiCastAddresses.add(new infoMultiCastConnection(mTemp, result.getProject().getPort(),
+                        result.getProject().getMulticast()));
+                mTemp.setSoTimeout(2000);
+                System.out.println("Progetto " + result.getProject().getName() + " creato");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else System.err.println(result.getMessage());
+
     }
 
     public void addmember(String[] command) throws IOException, ClassNotFoundException {
@@ -321,10 +343,10 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         oos.writeObject(command);
         ToClient<String> result = (ToClient<String>) ois.readObject();
         if(result.getMessage().equals("OK")){
-            Gson gson = new Gson();
-            System.out.print("Utenti: ");
-            String membersGson = gson.toJson(result.getList());
-            System.out.println(membersGson);
+            System.out.println("Utenti del progetto " + command[1] + ": ");
+            for(String currUser: result.getList()){
+                System.out.println(currUser);
+            }
 
         }else System.err.println(result.getMessage());
     }
@@ -332,13 +354,19 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     public void showcards(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
         ToClient<Card> result = (ToClient<Card>) ois.readObject();
+        System.out.println("result size: " + result.getList().size());
 
         if(result.getMessage().equals("OK")){
+            if(result.getList().size() == 0){
+                System.out.println("Il progetto non contiene nessuna card");
+            }
             for(Card currCard: result.getList()){
+
                 System.out.println("Card: " +currCard.getName());
                 System.out.println("Descrizione: " + currCard.getDescription());
                 System.out.println("History: " + currCard.getCardHistory());
             }
+
         }else System.err.println(result.getMessage());
     }
 
@@ -362,30 +390,31 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         oos.writeObject(command);
         ToClient<String> result = (ToClient<String>) ois.readObject();
         if(result.getMessage().equals("OK")){
-            Gson gson = new Gson();
-            System.out.print("Card history: ");
-            String historyGson = gson.toJson(result.getList());
-            System.out.println(historyGson);
+            System.out.println("Card history: ");
+
+            for(String currCardHistory: result.getList()){
+                System.out.println(currCardHistory);
+            }
 
         }else System.err.println(result.getMessage());
     }
 
     public void readChat(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
-        String result;
-        String byteToString = null;
+        ToClientChat result;
         boolean ok = true;
-        byte[] receiveBuffer = new byte[1024]; //alloco il buffer per la ricezione dei messaggi
-        result = (String) ois.readObject();
-        if(result.substring(0,2).equals("OK")){
+        result = (ToClientChat) ois.readObject();
+        if(result.getMessage().equals("OK")){
             DatagramPacket receivedPacket;
             for(infoMultiCastConnection info: multiCastAddresses){
-                if(info.getmAddress().equals(result.substring(2,11))){
+                if(info.getmAddress().equals(result.getMulticastChat())){
                     while(ok){
+                        byte[] receiveBuffer = new byte[8192]; //alloco il buffer per la ricezione dei messaggi
                         receivedPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                         try{
+                            info.getMulticastsocket().setSoTimeout(2000);
                             info.getMulticastsocket().receive(receivedPacket);
-                            byteToString = new String(receivedPacket.getData(), 0, receivedPacket.getLength(), StandardCharsets.US_ASCII);
+                            String byteToString = new String(receivedPacket.getData(), 0, receivedPacket.getLength());
                             System.out.println(byteToString);
                         } catch (SocketTimeoutException e) {
                             System.out.println("messaggi finiti");
@@ -402,29 +431,25 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     public void sendChatMsg(String[] command, Scanner in) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
         String message;
-        String result;
+        ToClientChat result;
         System.out.println("Inserisci il messaggio da inviare: ");
         message = in.nextLine();
         byte[] sendBuffer = message.getBytes();
-        //System.out.println("dimenione del messaggio: " + sendBuffer.);
-        result = (String) ois.readObject();
-        System.out.println(result.substring(0,2));  //risposta dal server
-        System.out.println(result.substring(2,11)); //indirizzo multicast
-        if(result.substring(0,2).equals("OK")){
-            try (DatagramSocket clientSocket = new DatagramSocket()) {
-                clientSocket.setSoTimeout(2000);
-                DatagramPacket packetToSend;
-                for(infoMultiCastConnection info: multiCastAddresses){
-                    if(info.getmAddress().equals(result.substring(2,11))){
-                        packetToSend = new DatagramPacket(sendBuffer, sendBuffer.length,
-                                                          InetAddress.getByName(info.getmAddress()),info.getPort());
-                        info.getMulticastsocket().send(packetToSend);
-                    }
-                }
 
-            } catch (SocketException e) {
-                e.printStackTrace();
+        result = (ToClientChat) ois.readObject();
+
+        if(result.getMessage().equals("OK")){
+            DatagramPacket packetToSend;
+            for(infoMultiCastConnection info: multiCastAddresses){
+                if(info.getmAddress().equals(result.getMulticastChat())){
+                    packetToSend = new DatagramPacket(sendBuffer, sendBuffer.length,
+                            InetAddress.getByName(info.getmAddress()),info.getPort());
+                    info.getMulticastsocket().send(packetToSend);
+                    System.out.println("messaggio inviato");
+                }
             }
+
+
         }else System.err.println(result);
 
 
@@ -451,6 +476,35 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                 if(!curr.getStatus().equals(status)) curr.setStatus(status);
             }
         if(!found) listUsersStatus.add(new UserAndStatus(userName,status));
+    }
+
+    @Override
+    public void notifyMulticastEvent(String projectMulticast, int projectPort) {
+        System.out.println("Aggiornamento multicast da " + projectMulticast + " " + projectPort);
+        MulticastSocket msClient;
+        try {
+            msClient = new MulticastSocket(projectPort);
+            msClient.joinGroup(InetAddress.getByName(projectMulticast));
+            //msClient.setSoTimeout(2000);
+            multiCastAddresses.add(new infoMultiCastConnection(msClient, projectPort, projectMulticast));
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void notifyCancelProject(String projectMulticast, int projectPort) throws RemoteException {
+        System.out.println("Cancellazione progetto da " + projectMulticast + " " + projectPort);
+        infoMultiCastConnection msClient = null;
+        for(infoMultiCastConnection infoMs: multiCastAddresses){
+            if(infoMs.getmAddress().equals(projectMulticast)){
+                try {
+                    infoMs.getMulticastsocket().leaveGroup(InetAddress.getByName(projectMulticast));
+                    msClient = infoMs;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if(msClient !=null) multiCastAddresses.remove(msClient);
     }
 
     private void help(){

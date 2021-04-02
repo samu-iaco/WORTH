@@ -49,7 +49,7 @@ public interface ServerInterface {
      *         dove ci sarà come primo membro l'utente
      *         che ha richiesto la creazione
      */
-    String createProject(String projectName, String username);
+    ToClientProject createProject(String projectName, String username);
 
     /**
      *
@@ -107,14 +107,14 @@ public interface ServerInterface {
      * @param currUsername utente corrente
      * @return l'utente invia il messaggio sulla chat del progetto projectName
      */
-    String sendChatMsg(String projectName, String currUsername);
+    ToClientChat sendChatMsg(String projectName, String currUsername);
 
     /**
      * @param projectName nome del progetto
      * @param currUsername utente corrente
      * @return i messaggi della chat del progetto projectName
      */
-    String readChat(String projectName,String currUsername);
+    ToClientChat readChat(String projectName,String currUsername);
 
     /**
      * @param projectName nome del progetto

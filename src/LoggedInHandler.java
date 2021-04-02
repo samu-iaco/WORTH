@@ -45,7 +45,6 @@ public class LoggedInHandler implements Runnable {
     public void start() {
         String[] command;
         try{
-            System.out.println("run " + Thread.currentThread().getName());
             command = (String[]) info.getObjectInputStream().readObject();
             System.out.println("command: " + command[0]);
             switch (command[0]){
@@ -66,7 +65,6 @@ public class LoggedInHandler implements Runnable {
                     info.getObjectOutputStream().writeObject(resultLogout); //invio verso il client
                     break;
 
-
                 case "listusers":
                     ArrayList<UserAndStatus> listToClient;
                     listToClient = server.listUsers();
@@ -83,16 +81,43 @@ public class LoggedInHandler implements Runnable {
                     info.getObjectOutputStream().writeObject(userProjects);
                     break;
                 case "createproject":
-                    String resultCreateProject = server.createProject(command[1],clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultCreateProject);
+                    ToClientProject resultCreateProject = new ToClientProject("" , null);
+                    if(command.length > 2){
+                        resultCreateProject.setMessage("Hai inserito troppi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultCreateProject);
+                    }else if(command.length < 2){
+                        resultCreateProject.setMessage("Hai inserito pochi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultCreateProject);
+                    }else{
+                        resultCreateProject = server.createProject(command[1],clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultCreateProject);
+                    }
                     break;
                 case "addmember":
-                    String resultCreateMember = server.addMember(command[1],command[2], clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultCreateMember);
+                    String resultCreateMember;
+                    if(command.length > 3){
+                        resultCreateMember = "Hai inserito troppi argomenti per questo comando";
+                        info.getObjectOutputStream().writeObject(resultCreateMember);
+                    }else if(command.length < 3){
+                        resultCreateMember = "Hai inserito pochi argomenti per questo comando";
+                        info.getObjectOutputStream().writeObject(resultCreateMember);
+                    }else{
+                        resultCreateMember = server.addMember(command[1],command[2], clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultCreateMember);
+                    }
                     break;
                 case "showmembers":
-                    ToClient<String> resultShowMembers = server.showMembers(command[1], clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultShowMembers);
+                    ToClient<String> resultShowMembers = new ToClient<>("",null);
+                    if(command.length > 2){
+                        resultShowMembers.setMessage("Hai inserito troppi argomenti per questo messaggio");
+                        info.getObjectOutputStream().writeObject(resultShowMembers);
+                    }else if(command.length < 2){
+                        resultShowMembers.setMessage("Hai inserito pochi argomenti per questo messaggio");
+                        info.getObjectOutputStream().writeObject(resultShowMembers);
+                    }else{
+                        resultShowMembers = server.showMembers(command[1], clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultShowMembers);
+                    }
                     break;
                 case "showcards":
                     ToClient<Card> resultShowCards = new ToClient<>("",null);
@@ -106,8 +131,9 @@ public class LoggedInHandler implements Runnable {
                     }
                     else{
                         resultShowCards = server.showCards(command[1], clientUser.getName());
-                        info.getObjectOutputStream().writeObject(resultShowCards);
+
                     }
+                    info.getObjectOutputStream().writeObject(resultShowCards);
 
                     break;
                 case "addcard":
@@ -122,8 +148,9 @@ public class LoggedInHandler implements Runnable {
                     }
                     else{
                         resultAddCard = server.addCard(command[1],command[2],command[3], clientUser.getName());
-                        info.getObjectOutputStream().writeObject(resultAddCard);
+
                     }
+                    info.getObjectOutputStream().writeObject(resultAddCard);
                     break;
                 case "movecard":
                     String resultMoveCard;
@@ -141,20 +168,64 @@ public class LoggedInHandler implements Runnable {
                     }
                     break;
                 case "getcardhistory":
-                    ToClient<String> resultCardHistory = server.getCardHistory(command[1],command[2], clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultCardHistory);
+                    ToClient<String> resultCardHistory = new ToClient<>("",null);
+                    if(command.length > 3){
+                        resultCardHistory.setMessage("Hai inserito troppi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultCardHistory);
+                    }
+                    else if(command.length < 3){
+                        resultCardHistory.setMessage("Hai inserito pochi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultCardHistory);
+                    }
+                    else{
+                        resultCardHistory = server.getCardHistory(command[1],command[2], clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultCardHistory);
+                    }
+
                     break;
                 case "readchat":
-                    String resultReadChat = server.readChat(command[1],clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultReadChat);
+                    ToClientChat resultReadChat = new ToClientChat("",null);
+                    if(command.length > 2){
+                        resultReadChat.setMessage("Hai inserito troppi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultReadChat);
+                    }
+                    else if(command.length < 2){
+                        resultReadChat.setMessage("Hai inserito pochi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultReadChat);
+                    }
+                    else{
+                        resultReadChat = server.readChat(command[1],clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultReadChat);
+                    }
                     break;
                 case "sendchatmsg":
-                    String resultSendMsg = server.sendChatMsg(command[1], clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultSendMsg);
+                    ToClientChat resultSendMsg = new ToClientChat("",null);
+                    if(command.length > 2){
+                        resultSendMsg.setMessage("Hai inserito troppi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultSendMsg);
+                    }
+                    else if(command.length < 2){
+                        resultSendMsg.setMessage("Hai inserito pochi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultSendMsg);
+                    }
+                    else{
+                        resultSendMsg = server.sendChatMsg(command[1], clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultSendMsg);
+                    }
                     break;
                 case "cancelproject":
-                    String resultCancelProject = server.cancelProject(command[1], clientUser.getName());
-                    info.getObjectOutputStream().writeObject(resultCancelProject);
+                    String resultCancelProject;
+                    if(command.length > 2){
+                        resultCancelProject = "Hai inserito troppi argomenti per questo comando";
+                        info.getObjectOutputStream().writeObject(resultCancelProject);
+                    }
+                    else if(command.length < 2){
+                        resultCancelProject = "Hai inserito pochi argomenti per questo comando";
+                        info.getObjectOutputStream().writeObject(resultCancelProject);
+                    }else{
+                        resultCancelProject = server.cancelProject(command[1], clientUser.getName());
+                        info.getObjectOutputStream().writeObject(resultCancelProject);
+                    }
                     break;
 
                 default:

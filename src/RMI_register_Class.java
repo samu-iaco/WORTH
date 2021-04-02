@@ -12,19 +12,11 @@ import java.util.List;
 public class RMI_register_Class extends UnicastRemoteObject implements RMI_register_Interface {
     SignedUpUsers userList;
     private List<InfoCallback> clients;
-    private ArrayList<User> dataUsers;
-
 
     public RMI_register_Class(SignedUpUsers userList) throws RemoteException {
         super();
         this.userList = userList;
         clients = new ArrayList<>();
-        this.dataUsers = new ArrayList<>();
-        userList.getList().forEach((s, user) -> {
-            synchronized (user){
-                dataUsers.add(user);
-            }
-        });
     }
 
     @Override
@@ -52,7 +44,7 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
                 .anyMatch(client -> ClientInterface.equals(client.getClient()));
         if (!contains){
             clients.add(new InfoCallback(ClientInterface,nickUtente));
-            System.out.println("Aggiunto un nuovo utente alla callback");
+            System.out.println("Aggiunto un nuovo utente alla callback: " + nickUtente);
         }
     }
 
@@ -90,4 +82,11 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
         else System.out.println("errore durante la rimozione del client dalla callback");
     }
 
+    public List<InfoCallback> getClients() {
+        return clients;
+    }
+
+    public void setClients(List<InfoCallback> clients) {
+        this.clients = clients;
+    }
 }

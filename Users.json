@@ -10,23 +10,8 @@
     "status": "offline"
   },
   {
-    "name": "casd",
-    "password": "dfc",
-    "status": "offline"
-  },
-  {
-    "name": "dx",
-    "password": "fv",
-    "status": "offline"
-  },
-  {
     "name": "mario",
     "password": "12345",
-    "status": "offline"
-  },
-  {
-    "name": "asddddaasd",
-    "password": "1",
     "status": "offline"
   }
 ]

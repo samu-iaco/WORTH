@@ -19,9 +19,10 @@ public class TCPServer implements ServerInterface{
     private ObjectOutputStream oos;
     private ArrayList<User> dataUsers;
     private ArrayList<Project> dataProjects;
+
     private ArrayList<MulticastGen> multicastGens;
     private ArrayList<infoMultiCastConnection> multicastAddresses;
-    private String multicastChat;
+
 
     ServerSocket serverSocket; //serverSocket per TCP
     SignedUpUsers userList;
@@ -39,6 +40,7 @@ public class TCPServer implements ServerInterface{
         serverSocket = new ServerSocket(PORT_TCP);  //creo il socket TCP
 
         this.projectList = projectList;
+
         System.out.println("server TCP in ascolto su: " + PORT_TCP);
         this.userList = userList;
         this.multicastGens = new ArrayList<>();
@@ -169,6 +171,7 @@ public class TCPServer implements ServerInterface{
                         tmp = true;
                         currUser.setStatus("online");
                         register.update(currUser.getName(), "online");
+
                         for(Map.Entry<String, Project> project : projectMap.entrySet()) {
                             Project currProject = project.getValue();
                             if(currProject.isInProject(currUsername))
@@ -320,10 +323,9 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public synchronized String createProject(String projectName, String username) {
+    public synchronized ToClientProject createProject(String projectName, String username) {
         if(projectName.isEmpty()) {
-            System.err.println("Il nome del progetto non puo essere vuoto");
-            return "Nome progetto vuoto";
+            return new ToClientProject("Nome progetto vuoto", null);
         }
 
         ConcurrentHashMap<String,Project> map = projectList.getList();
@@ -332,8 +334,7 @@ public class TCPServer implements ServerInterface{
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName)){
-                System.err.println("Il progetto " + projectName + " esiste gia");
-                return "Progetto gia esistente";
+                return new ToClientProject("Progetto gia esistente", null);
             }
         }
         Random rand = new Random();
@@ -344,19 +345,25 @@ public class TCPServer implements ServerInterface{
         Project project = new Project(projectName,username,port,mip);
         projectList.addProject(project);
         projectList.store();
+        try { //Callback per l'utente per aggiornare le informazioni di multicast
+            updateMulticast(project,username);
+        } catch (RemoteException e) { e.printStackTrace(); }
+
         MulticastSocket mServer; //aggiungo il server al multicast
         try {
             mServer = new MulticastSocket(port);
             mServer.joinGroup(InetAddress.getByName(mip));
             mServer.setSoTimeout(3000);
             multicastAddresses.add(new infoMultiCastConnection(mServer,port,mip));
+            for(infoMultiCastConnection info: multicastAddresses)
+                System.out.println("multicastaddresses info dentro createproject: " + info.getmAddress());
         } catch (IOException e) {
             e.printStackTrace();
 
 
         }
 
-        return "OK";
+        return new ToClientProject("OK" , project);
     }
 
     @Override
@@ -404,6 +411,10 @@ public class TCPServer implements ServerInterface{
                     if(!(currProject.isInProject(username))){
                         currProject.addMember(username);
                         projectList.store();
+                        try { //Callback per informare dell'aggiunta di un nuovo utente
+                            updateMulticast(currProject,username);
+                        } catch (RemoteException e) { e.printStackTrace(); }
+
                         return "OK";
                     }else return "L'utente è gia presente nel progetto";
                 }else return "L'utente non è un membro del progetto";
@@ -464,34 +475,38 @@ public class TCPServer implements ServerInterface{
     @Override
     public synchronized ToClient<Card> showCards(String projectName,String currUsername) {
         String result = null;
-        ArrayList<Card> list = null;
+        ArrayList<Card> list = new ArrayList<>();
 
         ConcurrentHashMap<String,Project> map = projectList.getList();
 
-        /*
         Collection<Project> values = map.values();
         ArrayList<Project> currData  = new ArrayList<>(values);
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
-                    list = currProject.getCards();
+                    //list = currProject.getCards();
+                    if(currProject.getCards()!=null){
+                        list.addAll(currProject.getCards());
+                    }
                     result = "OK";
                     return new ToClient<>(result, list);
                 }else {
                     result = "L'utente non è un membro del progetto";
                     return new ToClient<>(result, list);
                 }
-            else result = "Non esiste un progetto con questo nome";
         }
 
-         */
 
+        /*
         for(Map.Entry<String, Project> project : map.entrySet()) {
             Project currProject = project.getValue();
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
                     list = currProject.getCards();
+                    System.out.println("list size: " + list.size() + " Thread: " + Thread.currentThread().getName());
+                    for(Card currcard: list)
+                        System.out.println(currcard);
                     result = "OK";
                     return new ToClient<>(result, list);
                 }else {
@@ -500,11 +515,13 @@ public class TCPServer implements ServerInterface{
                 }
             else result = "Non esiste un progetto con questo nome";
         }
-        return new ToClient<>(result, null);
+
+         */
+        return new ToClient<>("Non esiste un progetto con questo nome", null);
     }
 
     @Override
-    public synchronized String addCard(String projectName, String cardName, String description,String currUsername) {
+    public String addCard(String projectName, String cardName, String description,String currUsername) {
         String result;
 
         ConcurrentHashMap<String,Project> projectMap = projectList.getList();
@@ -534,17 +551,10 @@ public class TCPServer implements ServerInterface{
     }
 
     @Override
-    public synchronized String moveCard(String projectName, String cardName, String partenza, String arrivo,String currUsername) {
+    public String moveCard(String projectName, String cardName, String partenza, String arrivo,String currUsername) {
         String result;
         System.out.println("move " + Thread.currentThread().getName());
 
-        /*try{
-            Thread.sleep(8000);
-        } catch (InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-         */
         ConcurrentHashMap<String,Project> projectMap = projectList.getList();
         for(Map.Entry<String, Project> project : projectMap.entrySet()) {
             Project currProject = project.getValue();
@@ -575,76 +585,86 @@ public class TCPServer implements ServerInterface{
         ArrayList<String> list = null;
         String result = null;
 
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
-
-        for(Project currProject: currData){
+        /*
+        for(Map.Entry<String, Project> project : projectMap.entrySet()) {
+            Project currProject = project.getValue();
+            System.out.println("progetto: " + currProject.getName());
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
                     list = currProject.cardHistory(cardName);
+                    if(list == null){
+                        result = "Questa card non esiste";
+                        return new ToClient<>(result,null);
+                    }
                     result = "OK";
                     return new ToClient<>(result,list);
                 }else {
                     result = "L'utente non è un membro del progetto";
                     return new ToClient<>(result,null);
                 }
-            else {
-                result = "non esiste un progetto con questo nome";
-                return new ToClient<>(result,null);
-            }
         }
 
-        return new ToClient<>(result,list);
+         */
+
+        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
+
+        Collection<Project> values = projectMap.values();
+        ArrayList<Project> currData  = new ArrayList<>(values);
+
+        for(Project currProject: currData){
+            if(currProject.getName().equals(projectName))
+
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    list = currProject.cardHistory(cardName);
+                    if(list == null){
+                        result = "Questa card non esiste";
+                        return new ToClient<>(result,null);
+                    }
+                    result = "OK";
+                    return new ToClient<>(result,list);
+                }else {
+                    result = "L'utente non è un membro del progetto";
+                    return new ToClient<>(result,null);
+                }
+        }
+
+        return new ToClient<>("non esiste un progetto con questo nome",null);
     }
 
     @Override
-    public synchronized String sendChatMsg(String projectName,String currUsername) {
-        String result = null;
+    public synchronized ToClientChat sendChatMsg(String projectName,String currUsername) {
+        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
 
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
+        Collection<Project> values = projectMap.values();
+        ArrayList<Project> currData  = new ArrayList<>(values);
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if((currProject.getProjectMembers().contains(currUsername))){
-                    this.multicastChat = currProject.getMulticast();
-                    result = ("OK"+multicastChat); //concateno alla risposta anche l'indirizzo multicast
-                    return result;
-                }else return "L'utente non è un membro del progetto";
+                    return new ToClientChat("OK",currProject.getMulticast());
+                }else return new ToClientChat("L'utente non è un membro del progetto", null);
         }
 
-        return "non esiste un progetto con questo nome";
+        return new ToClientChat("non esiste un progetto con questo nome",null);
     }
 
     @Override
-    public synchronized String readChat(String projectName, String currUsername) {
-        String result = null;
+    public synchronized ToClientChat readChat(String projectName, String currUsername) {
+        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
 
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
+        Collection<Project> values = projectMap.values();
+        ArrayList<Project> currData  = new ArrayList<>(values);
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
-                    this.multicastChat = currProject.getMulticast();
-                    return ("OK"+multicastChat);
-                }else return "L'utente non è un membro del progetto";
+
+                    return new ToClientChat("OK", currProject.getMulticast());
+                }else return new ToClientChat("L'utente non è un membro del progetto" , null);
 
         }
 
-        return "non esiste un progetto con questo nome";
+        return new ToClientChat("non esiste un progetto con questo nome", null);
     }
 
     @Override
@@ -652,13 +672,41 @@ public class TCPServer implements ServerInterface{
         String result = null;
         int countCards = 0;
 
-        ArrayList<Project> currData = new ArrayList<>();
-        projectList.getList().forEach((s,Project) ->{
-            synchronized (Project){
-                currData.add(Project);
-            }
-        });
+        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
+        for(Map.Entry<String, Project> project : projectMap.entrySet()) {
+            Project currProject = project.getValue();
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    countCards = currProject.countCards();
+                    if(currProject.getDONE().size() == countCards){
+                        //rimuovo il progetto
+                        projectList.getList().remove(currProject.getName());
+                        projectList.store();
+                        currProject.deleteDirectory(new File("./" + currProject.getName()));
+                        try{
+                            updateCancelProject(currProject); //callback per rimozione progetto
+                        }catch (RemoteException e){
+                            e.printStackTrace();
+                        }
+                        //aggiorno il multicast
+                        infoMultiCastConnection mserverLeave = null;
+                        for(infoMultiCastConnection info: multicastAddresses){
+                            if(info.getmAddress().equals(currProject.getMulticast())){
+                                try {
+                                    info.getMulticastsocket().leaveGroup(InetAddress.getByName(currProject.getMulticast()));
+                                    mserverLeave = info;
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        if(mserverLeave!=null) multicastAddresses.remove(mserverLeave);
+                        return "OK";
+                    }else return  "Ci sono delle card che non sono terminate";
+                }else return "L'utente non è un membro del progetto";
+        }
 
+        /*
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
@@ -668,7 +716,7 @@ public class TCPServer implements ServerInterface{
                         System.out.println(projectList.getList());
                         projectList.getList().remove(currProject.getName());
                         projectList.store();
-                        currProject.deleteDirectory(new File(("./" + currProject.getName())));
+                        currProject.deleteDirectory(new File("./" + currProject.getName()));
 
                         //aggiorno il multicast
                         infoMultiCastConnection mserverLeave = null;
@@ -692,7 +740,43 @@ public class TCPServer implements ServerInterface{
                 }else return "L'utente non è un membro del progetto";
         }
 
+         */
+
         return "non esiste un progetto con questo nome";
+    }
+
+    //aggiorna le informazioni multicast dei client
+    public void updateMulticast(Project projectName,String nickName) throws RemoteException {
+        doMulticastCallBacks(projectName,nickName);
+    }
+
+    private synchronized void doMulticastCallBacks(Project project,String nickName) throws RemoteException {
+        System.out.println("Callback multicast iniziate");
+        for (InfoCallback callbackinfoUser : register.getClients()) {
+            Notify_Interface client = callbackinfoUser.getClient();
+            if (callbackinfoUser.getNickUtente().equals(nickName))
+                client.notifyMulticastEvent(project.getMulticast(), project.getPort());
+        }
+        System.out.println("Callback multicast finite");
+    }
+
+    public void updateCancelProject(Project currProject) throws RemoteException{
+        doCancelProjectCallbacks(currProject);
+    }
+
+    private synchronized void doCancelProjectCallbacks(Project currProject){
+        System.out.println("Callback cancellazione progetto iniziate");
+        for(InfoCallback callbackinfoUser: register.getClients()){
+            Notify_Interface client = callbackinfoUser.getClient();
+            try{
+                if(currProject.isInProject(callbackinfoUser.getNickUtente())){
+                    client.notifyCancelProject(currProject.getMulticast(), currProject.getPort());
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
     public synchronized void searchFile(){
