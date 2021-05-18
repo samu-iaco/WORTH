@@ -1,0 +1,76 @@
+[
+  {
+    "name": "ciao",
+    "port": 6368,
+    "multicast": "224.0.0.3",
+    "cards": [],
+    "projectMembers": [
+      "samuele"
+    ],
+    "TODO": [],
+    "INPROGRESS": [],
+    "TOBEREVISITED": [],
+    "DONE": []
+  },
+  {
+    "name": "hello",
+    "port": 59953,
+    "multicast": "224.0.0.1",
+    "cards": [
+      {
+        "description": "descrizione",
+        "name": "tasks",
+        "cardHistory": [
+          "TODO",
+          "inprogress",
+          "done"
+        ]
+      },
+      {
+        "description": "descrizione1",
+        "name": "tasks1",
+        "cardHistory": [
+          "TODO"
+        ]
+      },
+      {
+        "description": "descrizione2",
+        "name": "tasks2",
+        "cardHistory": [
+          "TODO",
+          "inprogress"
+        ]
+      },
+      {
+        "description": "asd",
+        "name": "tasks4",
+        "cardHistory": [
+          "TODO"
+        ]
+      },
+      {
+        "description": "asdf",
+        "name": "tasks5",
+        "cardHistory": [
+          "TODO"
+        ]
+      }
+    ],
+    "projectMembers": [
+      "q",
+      "samuele"
+    ],
+    "TODO": [
+      "tasks1",
+      "tasks4",
+      "tasks5"
+    ],
+    "INPROGRESS": [
+      "tasks2"
+    ],
+    "TOBEREVISITED": [],
+    "DONE": [
+      "tasks"
+    ]
+  }
+]

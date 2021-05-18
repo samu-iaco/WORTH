@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * classe che implementa i metodi RMI
  */
-public class RMI_register_Class extends UnicastRemoteObject implements RMI_register_Interface {
+public class RMI_register_Class extends UnicastRemoteObject {
     SignedUpUsers userList;
     private List<InfoCallback> clients;
 
@@ -19,6 +19,7 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
         clients = new ArrayList<>();
     }
 
+    /*
     @Override
     public synchronized String register(String nickUtente, String password) throws RemoteException {
         System.out.println(Thread.currentThread().getName());
@@ -37,16 +38,19 @@ public class RMI_register_Class extends UnicastRemoteObject implements RMI_regis
         return null;    //null se l'utente non viene registrato
     }
 
+     */
 
-    @Override
+
     public synchronized void registerForCallback (Notify_Interface ClientInterface, String nickUtente) throws RemoteException {
         boolean contains = clients.stream()
                 .anyMatch(client -> ClientInterface.equals(client.getClient()));
         if (!contains){
             clients.add(new InfoCallback(ClientInterface,nickUtente));
+            System.out.println(clients.size());
             System.out.println("Aggiunto un nuovo utente alla callback: " + nickUtente);
         }
     }
+
 
     public void update(String nickName, String status) throws RemoteException {
         doCallbacks(nickName,status);

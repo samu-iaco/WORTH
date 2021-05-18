@@ -1,4 +1,6 @@
-public class InfoCallback {
+import java.io.Serializable;
+
+public class InfoCallback implements Serializable {
     private Notify_Interface client;
     private String nickUtente;
 

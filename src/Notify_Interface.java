@@ -2,6 +2,11 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface Notify_Interface extends Remote {
+    /**
+     * @param userName nome utente
+     * @param status nuovo stato
+     * notifica di un evento al client
+     */
     void notifyEvent(String userName, String status) throws RemoteException;
 
     /**

@@ -27,6 +27,9 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     private ArrayList<UserAndStatus> listUsersStatus;
     private ArrayList<infoMultiCastConnection> multiCastAddresses;
 
+    public ClientMain(){
+        super();    //creo l'oggetto remoto
+    }
 
     public static void main(String[] args){
         ClientMain clientMain = new ClientMain();
@@ -40,13 +43,12 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         try{
             //preparo la connessione RMI
             Registry r = LocateRegistry.getRegistry(PORT_RMI);
-            RMI_register_Interface registerRMI = (RMI_register_Interface) r.lookup("SignUp");
-
             //preparo la connessione TCP
             InetSocketAddress hA = new InetSocketAddress("localhost", PORT_TCP);
             client = SocketChannel.open(hA);
             oos = new ObjectOutputStream(client.socket().getOutputStream());
             ois = new ObjectInputStream(client.socket().getInputStream());
+            RMI_register_Interface registerRMI = (RMI_register_Interface) r.lookup("SignUp");
 
 
             Scanner in = new Scanner(System.in);
@@ -228,7 +230,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             listUsersStatus = resultLogin.getList();
                 if(resultLogin.getMulticast()!=null){
                 for(infoMultiCastConnection info: resultLogin.getMulticast()){
-                    //aggiungo per ogni utente che logga informazioni sul
+                    //aggiungo per ogni utente che logga informazioni sul multicast
                     MulticastSocket mLogin;
                     try {
                         mLogin = new MulticastSocket(info.getPort());
@@ -314,16 +316,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         ToClientProject result = (ToClientProject) ois.readObject();
 
         if(result.getMessage().equals("OK")){
-            try{
-                MulticastSocket mTemp = new MulticastSocket(result.getProject().getPort());
-                mTemp.joinGroup(InetAddress.getByName(result.getProject().getMulticast()));
-                multiCastAddresses.add(new infoMultiCastConnection(mTemp, result.getProject().getPort(),
-                        result.getProject().getMulticast()));
-                mTemp.setSoTimeout(2000);
-                System.out.println("Progetto " + result.getProject().getName() + " creato");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            System.out.println("Progetto " + result.getProject().getName() + " creato");
         }else System.err.println(result.getMessage());
 
     }
@@ -441,6 +434,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         if(result.getMessage().equals("OK")){
             DatagramPacket packetToSend;
             for(infoMultiCastConnection info: multiCastAddresses){
+                System.out.println("sendchatmsg in clientmain");
                 if(info.getmAddress().equals(result.getMulticastChat())){
                     packetToSend = new DatagramPacket(sendBuffer, sendBuffer.length,
                             InetAddress.getByName(info.getmAddress()),info.getPort());
@@ -467,7 +461,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
 
     @Override
-    public void notifyEvent(String userName, String status) throws RemoteException {
+    public void notifyEvent(String userName, String status) {
         boolean found = false;
         System.out.println("Richiesta di aggiornamento di stato " + userName + " " + status);
         for(UserAndStatus curr: listUsersStatus)
@@ -480,7 +474,6 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
     @Override
     public void notifyMulticastEvent(String projectMulticast, int projectPort) {
-        System.out.println("Aggiornamento multicast da " + projectMulticast + " " + projectPort);
         MulticastSocket msClient;
         try {
             msClient = new MulticastSocket(projectPort);
@@ -491,8 +484,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     }
 
     @Override
-    public void notifyCancelProject(String projectMulticast, int projectPort) throws RemoteException {
-        System.out.println("Cancellazione progetto da " + projectMulticast + " " + projectPort);
+    public void notifyCancelProject(String projectMulticast, int projectPort) {
         infoMultiCastConnection msClient = null;
         for(infoMultiCastConnection infoMs: multiCastAddresses){
             if(infoMs.getmAddress().equals(projectMulticast)){

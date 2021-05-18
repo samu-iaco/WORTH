@@ -1,5 +1,6 @@
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 public interface RMI_register_Interface extends Remote {
 
@@ -15,4 +16,5 @@ public interface RMI_register_Interface extends Remote {
     void registerForCallback (Notify_Interface ClientInterface, String nickUtente) throws RemoteException;
 
     void unregisterForCallback (Notify_Interface ClientInterface) throws RemoteException;
+
 }

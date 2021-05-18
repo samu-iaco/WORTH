@@ -79,12 +79,13 @@ public class Project implements Serializable {
             return "Nome o descrizione della carta vuoti";
         }
 
-        synchronized (cards){
-            for(Card currCard: cards) {
-                if (currCard.getName().equals(cardName)) {
-                    return ("Card " + currCard.getName() + " gia esistente");
-                }
+        for(Card currCard: cards) {
+            if (currCard.getName().equals(cardName)) {
+                return ("Card " + currCard.getName() + " gia esistente");
             }
+        }
+
+        synchronized (cards){
 
             Card card = new Card(description, cardName);
             cards.add(card);
@@ -123,11 +124,6 @@ public class Project implements Serializable {
                 && !partenza.equalsIgnoreCase("INPROGRESS") && !partenza.equalsIgnoreCase("DONE"))
             return "Lista di partenza non valida";
 
-        try{
-            Thread.sleep(6000);
-        } catch (InterruptedException exception) {
-            exception.printStackTrace();
-        }
 
         synchronized (cards){
             for(Card currCard: cards){
@@ -226,7 +222,7 @@ public class Project implements Serializable {
 
     public int countCards(){
         int count = 0;
-        count = TODO.size() + INPROGRESS.size()+ TOBEREVISITED.size() + DONE.size();
+        count = TODO.size() + INPROGRESS.size() + TOBEREVISITED.size() + DONE.size();
 
         return count;
     }

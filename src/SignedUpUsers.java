@@ -51,13 +51,11 @@ public class SignedUpUsers {
             //Aggiungo i valori dentro il nuovo arraylist
             Collections.addAll(data,dataArray);
 
-            //inserisco i valori dentro la concurrent Hashmap controllando che nessuno cerchi di modificare
-            //i valori che vanno inseriti
-            data.forEach(User ->{
-                synchronized (User){
-                    users.put(User.getName(), User);
-                }
-            });
+            //inserisco gli utenti dentro la concurrent Hashmap
+            for(User currUser: data){
+                users.putIfAbsent(currUser.getName(), currUser);
+            }
+
             fis.close();
 
         } catch (IOException e) {
@@ -93,18 +91,16 @@ public class SignedUpUsers {
     /**
      * salva su file
      */
-    public synchronized void store(){
+    public void store(){
         try{
             FileOutputStream fos = new FileOutputStream(file);
             //creo un GSON per formattare il testo
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             //porto i dati dall' hashmap all'arraylist
-            ArrayList<User> data = new ArrayList<>();
-            users.forEach((s, user) -> {
-                synchronized (user){
-                    data.add(user);
-                }
-            });
+            ArrayList<User> data;
+            Collection<User> values = users.values();
+            data = new ArrayList<>(values);
+
             String s = gson.toJson(data);
             byte[] b = s.getBytes();
             fos.write(b);

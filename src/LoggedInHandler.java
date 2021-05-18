@@ -17,10 +17,10 @@ public class LoggedInHandler implements Runnable {
      */
     private User clientUser;
     private SignedUpUsers SignedUpUsers;
-    RMI_register_Class register;
+
     private boolean stop = false;
     private TCPServer server;
-    // Constructor
+
     public LoggedInHandler(ClientInfo info, TCPServer server, SignedUpUsers userList)
     {
         this.SignedUpUsers = userList;
@@ -32,8 +32,6 @@ public class LoggedInHandler implements Runnable {
     {
         try {
             while (!stop) {
-                //Aspetto che mi arrivi un nuovo Object dal client
-
                 start();
             }
         }catch (Exception e){

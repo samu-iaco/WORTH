@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,7 +37,7 @@ public class SignedUpProjects {
     /**
      * Recupero i progetti dal file
      */
-    private  void searchFile(){
+    private void searchFile(){
         try{
             //apro il file e lo leggo
             FileInputStream fis = new FileInputStream(file);
@@ -45,13 +46,10 @@ public class SignedUpProjects {
             ArrayList<Project> data = new ArrayList<>();
             //Aggiungo i valori dentro il nuovo arraylist
             Collections.addAll(data,dataArray);
-            //inserisco i valori dentro la concurrent Hashmap controllando che nessuno cerchi di modificare
-            //i valori che vanno inseriti
-            data.forEach(Project ->{
-                synchronized (Project){
-                    projects.put(Project.getName(), Project);
-                }
-            });
+            //inserisco i progetti dentro la concurrent Hashmap
+            for(Project currProject: data){
+                projects.putIfAbsent(currProject.getName(), currProject);
+            }
             fis.close();
         }catch (IOException e){
             e.printStackTrace();
@@ -59,12 +57,13 @@ public class SignedUpProjects {
 
     }
 
-    public Boolean addProject(Project project){
+    public String addProject(Project project){
+        System.out.println("Thread in signedUpProjects ADDPROJECT: " + Thread.currentThread().getName());
         if(projects.putIfAbsent(project.getName(),project) == null){
             this.store(); //aggiungo il progetto e salvo il file
-            return true;
+            return "OK";
         }
-        else return false;
+        return null;
     }
 
     /**
@@ -76,16 +75,15 @@ public class SignedUpProjects {
     }
 
     public synchronized void store(){
+        System.out.println("Thread in signedUpProjects STORE: " + Thread.currentThread().getName());
+
         try {
             FileOutputStream fos = new FileOutputStream(file);
 
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            ArrayList<Project> data = new ArrayList<>();
-            projects.forEach((s,Project) ->{
-                synchronized (Project){
-                    data.add(Project);
-                }
-            });
+            ArrayList<Project> data;
+            Collection<Project> values = projects.values();
+            data = new ArrayList<>(values);
 
             //scrivo sul file
             String s = gson.toJson(data);
