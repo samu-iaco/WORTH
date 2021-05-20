@@ -7,12 +7,13 @@ import java.io.*;
 import java.net.*;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteObject;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class TCPServer implements ServerInterface, RMI_register_Interface{
+public class TCPServer extends RemoteObject implements ServerInterface, RMI_register_Interface{
     private static final int PORT_TCP = 9999;
     private String NAME_FILE; //file per gli indirizzi multicast
 
@@ -38,7 +39,7 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
 
 
     public TCPServer(SignedUpUsers userList, SignedUpProjects projectList) throws IOException, ClassNotFoundException {
-
+        super();
         serverSocket = new ServerSocket(PORT_TCP);  //creo il socket TCP
 
         this.projectList = projectList;
@@ -58,7 +59,7 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
         int projectPort;
         String mProject;
         MulticastSocket msServer;
-        for(Project currProject: dataProjects){
+        for(Project currProject: dataProjects){ //ottento le informazioni dei progetti per il server
             projectPort = currProject.getPort();
             mProject = currProject.getMulticast();
             msServer = new MulticastSocket(projectPort); // creo il multicast socket sulla porta del progetto
@@ -92,7 +93,6 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
                 currUser.setStatus("offline");
         }
 
-
     }
 
     public void TCPStart() throws IOException {
@@ -106,8 +106,6 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
             ois = new ObjectInputStream(sock.getInputStream());
 
             oos = new ObjectOutputStream(sock.getOutputStream());
-
-
 
             //creo l'oggetto che descrive le informazioni sulla connessione del client
             ClientInfo clientInfo = new ClientInfo();
@@ -270,6 +268,7 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
         int port = rand.nextInt((65535-1024))+1025; //escludo da tutte le 65535 le 1024 porte conosciute
                                                     //per generare un intero nelle porte disponibili
         String mip = this.multicastGen.randomIP();
+
         storeMulticast(multicastGen);    //salvo l'indirizzo multicast nel file json
         Project project = new Project(projectName,username,port,mip);
         if(projectList.addProject(project).equals("OK")){
@@ -321,8 +320,8 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
                 if(currProject.getProjectMembers().contains(currUsername)){
                     if(!(currProject.isInProject(username))){
                         currProject.addMember(username);
-                        projectList.store();
-                        try { //Callback per informare dell'aggiunta di un nuovo utente
+                        projectList.store();    //aggiorno il file dei progetti con il nuovo utente
+                        try { //Callback per informare l'utente delle info multicast
                             updateMulticast(currProject,username);
                         } catch (RemoteException e) { e.printStackTrace(); }
 
@@ -398,7 +397,7 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
                     result = currProject.addCard(cardName,description);
-                    projectList.store();
+                    projectList.store();    //aggiorno il file dei progetti con la card aggiunta
                     return result;
                 }else return "L'utente non è un membro del progetto";
         }
@@ -417,7 +416,7 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
                     result = currProject.moveCard(cardName,partenza,arrivo);
-                    projectList.store();
+                    projectList.store();    //aggiorno il file dei progetti con la card spostata
                     return result;
                 }else return "L'utente non è un membro del progetto";
         }
@@ -574,15 +573,20 @@ public class TCPServer implements ServerInterface, RMI_register_Interface{
 
     //RMI
     @Override
-    public synchronized String register(String nickUtente, String password) throws RemoteException {
+    public String register(String nickUtente, String password) throws RemoteException {
         System.out.println(Thread.currentThread().getName());
+
         if(nickUtente.isEmpty() || password.isEmpty()) {
             System.err.println("Il nome utente o la password non possono essere vuoti");
             throw new IllegalArgumentException("Nome utente o password vuoti");
         }
 
         User user = new User(nickUtente,password);
-
+        try{
+            Thread.sleep(5000);
+        } catch (InterruptedException exception) {
+            exception.printStackTrace();
+        }
         if(userList.addUser(user)) {
             update(nickUtente,"offline");
             return "OK"; //OK se l'utente viene registrato

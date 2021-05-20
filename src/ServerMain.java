@@ -23,13 +23,10 @@ public class ServerMain extends RemoteObject {
     public static void main(String[] args) {
 
         try{
-            Registry registry = LocateRegistry.createRegistry(PORT_RMI);
-            System.out.println("Server ready...");
-            //avvio del server RMI
-            //RMI_register_Class server = new RMI_register_Class(usersList); //devo creare il file con la lista degli utenti
             TCPServer server = new TCPServer(usersList,projectsList); //avvio della connessione TCP del server
+            System.out.println("Server ready...");
+            Registry registry = LocateRegistry.createRegistry(PORT_RMI);
             RMI_register_Interface stub = (RMI_register_Interface) UnicastRemoteObject.exportObject(server,0);
-            //Interfaccia remota
 
             registry.rebind("SignUp" , stub);
             //parte TCP

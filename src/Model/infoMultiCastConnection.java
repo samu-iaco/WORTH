@@ -3,6 +3,9 @@ package Model;
 import java.io.Serializable;
 import java.net.MulticastSocket;
 
+/**
+ * Informazioni sulle connessioni multicast
+ */
 public class infoMultiCastConnection implements Serializable{
     private MulticastSocket multicastsocket;
     private int port;

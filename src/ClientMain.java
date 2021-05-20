@@ -80,7 +80,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                                 System.err.println("Un utente è gia loggato, prima si deve scollegare");
                                 break;
                             }
-                            boolean resultLogin = login(command,client);
+                            boolean resultLogin = login(command);
                             if(resultLogin){
                                 alreadyLogged = true;
                                 System.out.println("Registrazione di " + command[1] + " alla callback");
@@ -218,7 +218,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         else System.out.println(result);
     }
 
-    public boolean login(String[] command, SocketChannel client) throws IOException, ClassNotFoundException {
+    public boolean login(String[] command) throws IOException, ClassNotFoundException {
         //invio al server
         oos.writeObject(new String[]{"login"});
         oos.writeObject(new User(command[1],command[2]));
@@ -478,7 +478,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         try {
             msClient = new MulticastSocket(projectPort);
             msClient.joinGroup(InetAddress.getByName(projectMulticast));
-            //msClient.setSoTimeout(2000);
+            msClient.setSoTimeout(2000);
             multiCastAddresses.add(new infoMultiCastConnection(msClient, projectPort, projectMulticast));
         } catch (IOException e) { e.printStackTrace(); }
     }
