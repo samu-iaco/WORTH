@@ -7,11 +7,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Path;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 
 /**
  * classe che gestisce i progetti
@@ -20,7 +17,7 @@ public class Project implements Serializable {
     private String name;
     private int port;
     private String multicast;
-    private ArrayList<Card> cards;
+    private final ArrayList<Card> cards;
     private ArrayList<String> projectMembers;
     private ArrayList<String> TODO;
     private ArrayList<String> INPROGRESS;
@@ -81,7 +78,7 @@ public class Project implements Serializable {
 
         for(Card currCard: cards) {
             if (currCard.getName().equals(cardName)) {
-                return ("Card " + currCard.getName() + " gia esistente");
+                return ("Card " + currCard.getName() + " già esistente");
             }
         }
 
@@ -107,7 +104,6 @@ public class Project implements Serializable {
             }
         }
 
-
         return "OK";
     }
 
@@ -123,6 +119,10 @@ public class Project implements Serializable {
         if(!partenza.equalsIgnoreCase("TODO") && !partenza.equalsIgnoreCase("TOBEREVISITED")
                 && !partenza.equalsIgnoreCase("INPROGRESS") && !partenza.equalsIgnoreCase("DONE"))
             return "Lista di partenza non valida";
+        if(!TODO.contains(cardName) && !INPROGRESS.contains(cardName) && !TOBEREVISITED.contains(cardName)
+           && !DONE.contains(cardName))
+            return "La card non esiste";
+
 
 
         synchronized (cards){
@@ -201,11 +201,9 @@ public class Project implements Serializable {
     /**
      *
      * @param currDir cartella da eliminare
-     * rimuove la cartella del progetto
+     * rimuove la cartella del progetto e ricorsivamente tutti i file al suo interno
      */
     public void deleteDirectory(File currDir){
-        String result;
-        System.out.println(currDir);
         try{
             File[] allContents = currDir.listFiles();
             if (allContents != null) {
@@ -277,10 +275,6 @@ public class Project implements Serializable {
 
     public ArrayList<Card> getCards() {
         return cards;
-    }
-
-    public void setCards(ArrayList<Card> cards) {
-        this.cards = cards;
     }
 
     public int getPort() {

@@ -47,6 +47,14 @@ public class MulticastGen implements Serializable {
         return "Errore nella generazione dell'indirizzo IP";
     }
 
+    public String reset(){
+        this.p1 = 224;
+        this.p2 = 0;
+        this.p3 = 0;
+        this.p4 = 0;
+        return (p1+"." + p2 + "." +p3 + "." +p4);
+    }
+
     public int getP1() {
         return p1;
     }

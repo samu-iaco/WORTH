@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class TCPServer extends RemoteObject implements ServerInterface, RMI_register_Interface{
+public class TCPServer extends UnicastRemoteObject implements ServerInterface, RMI_register_Interface{
     private static final int PORT_TCP = 9999;
     private String NAME_FILE; //file per gli indirizzi multicast
 
@@ -23,7 +23,7 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
 
     private ArrayList<MulticastGen> multicastGens;
     private ArrayList<infoMultiCastConnection> multicastAddresses;
-    private List<InfoCallback> clients;
+    private final List<InfoCallback> clients;
 
 
     ServerSocket serverSocket; //serverSocket per TCP
@@ -38,7 +38,7 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
 
-    public TCPServer(SignedUpUsers userList, SignedUpProjects projectList) throws IOException, ClassNotFoundException {
+    public TCPServer(SignedUpUsers userList, SignedUpProjects projectList) throws IOException {
         super();
         serverSocket = new ServerSocket(PORT_TCP);  //creo il socket TCP
 
@@ -116,8 +116,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
 
             LoggedInHandler client = new LoggedInHandler(clientInfo, this, this.userList);
             executor.execute(client); //avvio il thread
-            System.out.println("costruttore TCPServer " + Thread.currentThread().getName());
-
 
         }
     }
@@ -133,8 +131,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
             result = "Nome utente o password vuoti";
         }
 
-        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
-        ConcurrentHashMap<String,User> userMap = userList.getList();
 
         boolean tmp = false;
         for(Map.Entry<String, User> user : userList.getList().entrySet()) {
@@ -147,14 +143,14 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
                         update(currUser.getName(), "online");
 
                         for(Map.Entry<String, Project> project : projectList.getList().entrySet()) {
-                            Project currProject = project.getValue();
+                            Project currProject = project.getValue();   //informazioni multicast di cui l'utente è membro
                             if(currProject.isInProject(currUsername))
                                 multicast.add(new infoMultiCastConnection(null, currProject.getPort(), currProject.getMulticast()));
                         }
                     } else result = "Utente gia loggato";
                 } else result = "Password errata";
 
-            list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));
+            list.add(new UserAndStatus(currUser.getName(), currUser.getStatus()));  //lista degli utenti
         }
         if(!tmp && result == null){
             result = "Utente non registrato nel sistema";
@@ -177,11 +173,9 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
             return  "Nome utente vuoto";
         }
 
-        ConcurrentHashMap<String,User> map = userList.getList();
-
         for(Map.Entry<String, User> u : userList.getList().entrySet()) {
             User currUser = u.getValue();
-
+            System.out.println("currUsername: " + currUsername + " currUser: " + currUser.getName() + " status: " + currUser.getStatus());
             if(currUser.getName().equals(currUsername)){
                 if(currUser.getName().equals(nickName))
                     if(currUser.getStatus().equals("online")){
@@ -203,7 +197,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     public  ArrayList<UserAndStatus> listUsers(){
         ArrayList<UserAndStatus> list = new ArrayList<>();
 
-        ConcurrentHashMap<String,User> map = userList.getList();
         Collection<User> values = userList.getList().values();
         ArrayList<User> currData = new ArrayList<>(values);
 
@@ -217,7 +210,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     public ArrayList<UserAndStatus> listOnlineusers() {
         ArrayList<UserAndStatus> list = new ArrayList<>();
 
-        ConcurrentHashMap<String,User> map = userList.getList();
         Collection<User> values = userList.getList().values();
         ArrayList<User> currData = new ArrayList<>(values);
 
@@ -234,7 +226,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     public ArrayList<Project> listProjects(String username) {
         ArrayList<Project> list = new ArrayList<>();
 
-        ConcurrentHashMap<String,Project> map = projectList.getList();
         Collection<Project> values = projectList.getList().values();
         ArrayList<Project> currData  = new ArrayList<>(values);
 
@@ -255,7 +246,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
             return new ToClientProject("Nome progetto vuoto", null);
         }
 
-        ConcurrentHashMap<String,Project> map = projectList.getList();
         Collection<Project> values = projectList.getList().values();
         ArrayList<Project> currData  = new ArrayList<>(values);
 
@@ -297,15 +287,13 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     @Override
     public synchronized String addMember(String projectName, String username , String currUsername) {
 
-        ConcurrentHashMap<String,User> userMap = userList.getList();
-        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
 
         boolean userExist = false;
 
         Collection<User> values = userList.getList().values();
         ArrayList<User> currData = new ArrayList<>(values);
 
-        for(User currUser: currData){
+        for(User currUser: currData){   //controllo se l'utente da aggiungere al progetto esiste
             if(currUser.getName().equals(username)){
                 userExist = true;
                 break;
@@ -318,7 +306,7 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
             Project currProject = project.getValue();
             if(currProject.getName().equals(projectName)){
                 if(currProject.getProjectMembers().contains(currUsername)){
-                    if(!(currProject.isInProject(username))){
+                    if(!(currProject.isInProject(username))){   //se l'utente non è già presente nel progetto
                         currProject.addMember(username);
                         projectList.store();    //aggiorno il file dei progetti con il nuovo utente
                         try { //Callback per informare l'utente delle info multicast
@@ -337,35 +325,31 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
 
     @Override
     public ToClient<String> showMembers(String projectName, String currUsername) {
-        ArrayList<String> list = null;
-        String result = null;
+        ArrayList<String> list = new ArrayList<>();
 
-        ConcurrentHashMap<String,Project> map = projectList.getList();
         Collection<Project> values = projectList.getList().values();
-        ArrayList<Project> currData  = new ArrayList<>(values);
 
+        ArrayList<Project> currData  = new ArrayList<>(values);
+        if(currData.isEmpty())
+            return new ToClient<>("Non esiste nessun progetto",null);
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
-                    list = currProject.getProjectMembers();
-                    result = "OK";
-                    return new ToClient<>(result,list);
+                    if(currProject.getProjectMembers()!=null)
+                        list.addAll(currProject.getProjectMembers());
+                    return new ToClient<>("OK",list);
                 }else {
-                    result = "L'utente non è un membro del progetto";
-                    return new ToClient<>(result,null);
+                    return new ToClient<>("L'utente non è un membro del progetto",null);
                 }
-            else result = "Non esiste un progetto con questo nome";
         }
 
-        return new ToClient<>(result,null);
+        return new ToClient<>("Non esiste un progetto con questo nome",null);
     }
 
     @Override
     public ToClient<Card> showCards(String projectName,String currUsername) {
-        String result = null;
+        String result;
         ArrayList<Card> list = new ArrayList<>();
-
-        ConcurrentHashMap<String,Project> map = projectList.getList();
 
         Collection<Project> values = projectList.getList().values();
         ArrayList<Project> currData  = new ArrayList<>(values);
@@ -373,7 +357,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
-                    //list = currProject.getCards();
                     if(currProject.getCards()!=null){
                         list.addAll(currProject.getCards());
                     }
@@ -386,6 +369,33 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
         }
 
         return new ToClient<>("Non esiste un progetto con questo nome", null);
+    }
+
+    @Override
+    public ToClient<Card> showCard(String projectName, String cardName, String currUsername) {
+        String result;
+        ArrayList<Card> list = new ArrayList<>();
+
+        Collection<Project> values = projectList.getList().values();
+        ArrayList<Project> currData  = new ArrayList<>(values);
+
+        for(Project currProject: currData){
+            if(currProject.getName().equals(projectName))
+                if(currProject.getProjectMembers().contains(currUsername)){
+                    if(currProject.cardHistory(cardName) == null){
+                        result = "Questa card non esiste";
+                        return new ToClient<>(result,null);
+                    }else
+                        list = new ArrayList<>(currProject.getCards());
+
+                    result = "OK";
+                    return new ToClient<>(result,list);
+                }else{
+                    result = "L'utente non è un membro del progetto";
+                    return new ToClient<>(result,null);
+                }
+        }
+        return new ToClient<>("non esiste un progetto con questo nome",null);
     }
 
     @Override
@@ -410,8 +420,8 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     public String moveCard(String projectName, String cardName, String partenza, String arrivo,String currUsername) {
         String result;
 
-        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
-        for(Map.Entry<String, Project> project : projectMap.entrySet()) {
+
+        for(Map.Entry<String, Project> project : projectList.getList().entrySet()) {
             Project currProject = project.getValue();
             if(currProject.getName().equals(projectName))
                 if(currProject.getProjectMembers().contains(currUsername)){
@@ -426,24 +436,22 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
 
     @Override
     public ToClient<String> getCardHistory(String projectName, String cardName,String currUsername) {
-        ArrayList<String> list = null;
-        String result = null;
-
-
-        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
+        ArrayList<String> list;
+        String result;
 
         Collection<Project> values = projectList.getList().values();
         ArrayList<Project> currData  = new ArrayList<>(values);
 
         for(Project currProject: currData){
             if(currProject.getName().equals(projectName))
-
                 if(currProject.getProjectMembers().contains(currUsername)){
-                    list = currProject.cardHistory(cardName);
-                    if(list == null){
+                    if(currProject.cardHistory(cardName) == null){
                         result = "Questa card non esiste";
                         return new ToClient<>(result,null);
                     }
+                    else
+                        list = new ArrayList<>(currProject.cardHistory(cardName));
+
                     result = "OK";
                     return new ToClient<>(result,list);
                 }else {
@@ -457,7 +465,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
 
     @Override
     public ToClientChat sendChatMsg(String projectName,String currUsername) {
-        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
 
         Collection<Project> values = projectList.getList().values();
         ArrayList<Project> currData  = new ArrayList<>(values);
@@ -474,7 +481,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
 
     @Override
     public ToClientChat readChat(String projectName, String currUsername) {
-        ConcurrentHashMap<String,Project> projectMap = projectList.getList();
 
         Collection<Project> values = projectList.getList().values();
         ArrayList<Project> currData  = new ArrayList<>(values);
@@ -492,7 +498,7 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     }
 
     @Override
-    public String cancelProject(String projectName, String currUsername) throws IOException {
+    public String cancelProject(String projectName, String currUsername){
         int countCards = 0;
 
         ConcurrentHashMap<String,Project> projectMap = projectList.getList();
@@ -506,7 +512,11 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
                         if(projectList.getList().remove(currProject.getName())==null){
                             return "Impossibile rimuovere il progetto";
                         }
-                        projectList.store();
+                        if(projectList.getList().isEmpty()) {
+                            this.multicastGen.reset();
+                            System.out.println(this.multicastGen);
+                        }
+                        projectList.store();    //aggiorno il file dei progetti
                         currProject.deleteDirectory(new File("./" + currProject.getName()));
                         try{
                             updateCancelProject(currProject); //callback per rimozione progetto
@@ -526,6 +536,7 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
                             }
                         }
                         if(mserverLeave!=null) multicastAddresses.remove(mserverLeave);
+
                         return "OK";
                     }else return  "Ci sono delle card che non sono terminate";
                 }else return "L'utente non è un membro del progetto";
@@ -574,7 +585,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     //RMI
     @Override
     public String register(String nickUtente, String password) throws RemoteException {
-        System.out.println(Thread.currentThread().getName());
 
         if(nickUtente.isEmpty() || password.isEmpty()) {
             System.err.println("Il nome utente o la password non possono essere vuoti");
@@ -582,11 +592,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
         }
 
         User user = new User(nickUtente,password);
-        try{
-            Thread.sleep(5000);
-        } catch (InterruptedException exception) {
-            exception.printStackTrace();
-        }
         if(userList.addUser(user)) {
             update(nickUtente,"offline");
             return "OK"; //OK se l'utente viene registrato
@@ -597,7 +602,6 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
 
     @Override
     public synchronized void registerForCallback (Notify_Interface ClientInterface, String nickUtente) throws RemoteException {
-        System.out.println(Thread.currentThread().getName());
         boolean contains = clients.stream()
                 .anyMatch(client -> ClientInterface.equals(client.getClient()));
         if (!contains){
@@ -657,7 +661,7 @@ public class TCPServer extends RemoteObject implements ServerInterface, RMI_regi
     }
 
     //metodo usato per salvare sul file multicast
-    public void storeMulticast(MulticastGen mip){
+    public synchronized void storeMulticast(MulticastGen mip){
         try {
             FileOutputStream fos = new FileOutputStream(NAME_FILE);
 

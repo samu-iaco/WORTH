@@ -76,6 +76,14 @@ public interface ServerInterface {
 
     /**
      * @param projectName nome del progetto
+     * @param cardName Nome della card
+     * @param currUsername utente corrente
+     * @return mostra le cards relative al progetto
+     */
+    ToClient<Card> showCard(String projectName, String cardName, String currUsername);
+
+    /**
+     * @param projectName nome del progetto
      * @param cardName nome della card
      * @param description breve descrizione
      * @param currUsername utente corrente

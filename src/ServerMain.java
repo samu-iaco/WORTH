@@ -8,7 +8,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
 
-public class ServerMain extends RemoteObject {
+public class ServerMain {
     private static final int PORT_RMI = 5001;
 
     /**
@@ -23,16 +23,15 @@ public class ServerMain extends RemoteObject {
     public static void main(String[] args) {
 
         try{
-            TCPServer server = new TCPServer(usersList,projectsList); //avvio della connessione TCP del server
+            TCPServer server = new TCPServer(usersList,projectsList);
             System.out.println("Server ready...");
             Registry registry = LocateRegistry.createRegistry(PORT_RMI);
-            RMI_register_Interface stub = (RMI_register_Interface) UnicastRemoteObject.exportObject(server,0);
 
-            registry.rebind("SignUp" , stub);
+            registry.rebind("SignUp" , server);
             //parte TCP
             server.TCPStart();
 
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

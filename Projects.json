@@ -1,102 +1,16 @@
 [
   {
-    "name": "ff",
-    "port": 34278,
-    "multicast": "224.0.0.4",
-    "cards": [],
-    "projectMembers": [
-      "q"
-    ],
-    "TODO": [],
-    "INPROGRESS": [],
-    "TOBEREVISITED": [],
-    "DONE": []
-  },
-  {
-    "name": "asd",
-    "port": 50263,
-    "multicast": "224.0.0.5",
-    "cards": [],
-    "projectMembers": [
-      "q"
-    ],
-    "TODO": [],
-    "INPROGRESS": [],
-    "TOBEREVISITED": [],
-    "DONE": []
-  },
-  {
-    "name": "ciao",
-    "port": 6368,
-    "multicast": "224.0.0.3",
-    "cards": [],
-    "projectMembers": [
-      "samuele"
-    ],
-    "TODO": [],
-    "INPROGRESS": [],
-    "TOBEREVISITED": [],
-    "DONE": []
-  },
-  {
-    "name": "hello",
-    "port": 59953,
+    "name": "prova",
+    "port": 61756,
     "multicast": "224.0.0.1",
-    "cards": [
-      {
-        "description": "descrizione",
-        "name": "tasks",
-        "cardHistory": [
-          "TODO",
-          "inprogress",
-          "done"
-        ]
-      },
-      {
-        "description": "descrizione1",
-        "name": "tasks1",
-        "cardHistory": [
-          "TODO"
-        ]
-      },
-      {
-        "description": "descrizione2",
-        "name": "tasks2",
-        "cardHistory": [
-          "TODO",
-          "inprogress"
-        ]
-      },
-      {
-        "description": "asd",
-        "name": "tasks4",
-        "cardHistory": [
-          "TODO"
-        ]
-      },
-      {
-        "description": "asdf",
-        "name": "tasks5",
-        "cardHistory": [
-          "TODO"
-        ]
-      }
-    ],
+    "cards": [],
     "projectMembers": [
-      "q",
-      "samuele"
+      "samuele",
+      "utente"
     ],
-    "TODO": [
-      "tasks1",
-      "tasks4",
-      "tasks5"
-    ],
-    "INPROGRESS": [
-      "tasks2"
-    ],
+    "TODO": [],
+    "INPROGRESS": [],
     "TOBEREVISITED": [],
-    "DONE": [
-      "tasks"
-    ]
+    "DONE": []
   }
 ]

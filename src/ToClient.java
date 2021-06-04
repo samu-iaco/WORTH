@@ -23,7 +23,7 @@ public class ToClient<T> implements Serializable {
     }
 
     public ArrayList<T> getList() {
-        return list;
+        return this.list;
     }
 
     public void setList(ArrayList<T> list) {

@@ -3,6 +3,7 @@ import Model.Project;
 import Model.User;
 import java.io.IOException;
 import java.net.SocketException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,7 +41,7 @@ public class LoggedInHandler implements Runnable {
         }
     }
 
-    public void start() {
+    public void start() throws RemoteException {
         String[] command;
         try{
             command = (String[]) info.getObjectInputStream().readObject();
@@ -133,6 +134,22 @@ public class LoggedInHandler implements Runnable {
                     }
                     info.getObjectOutputStream().writeObject(resultShowCards);
 
+                    break;
+                case "showcard":
+                    ToClient<Card> resultShowCard = new ToClient<>("",null);
+                    if(command.length>3){
+                        resultShowCard.setMessage("hai inserito troppi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultShowCard);
+                    }
+                    else if(command.length<3) {
+                        resultShowCard.setMessage("hai inserito pochi argomenti per questo comando");
+                        info.getObjectOutputStream().writeObject(resultShowCard);
+                    }
+                    else{
+                        resultShowCard = server.showCard(command[1],command[2], clientUser.getName());
+
+                    }
+                    info.getObjectOutputStream().writeObject(resultShowCard);
                     break;
                 case "addcard":
                     String resultAddCard;
@@ -234,6 +251,7 @@ public class LoggedInHandler implements Runnable {
             }
         } catch (Exception e){
             stop = true;
+            server.logout(clientUser.getName(),clientUser.getName());
             System.out.println("Disconnessione improvvisa");
         }
     }

@@ -1,15 +1,12 @@
 import java.io.Serializable;
 
+/**
+ * classe usata per salvare le informazioni per la callback
+ */
 public class InfoCallback implements Serializable {
     private Notify_Interface client;
     private String nickUtente;
 
-    /**
-     *
-     * @param client interfaccia
-     * @param nickUtente username
-     * classe usata per salvare le informazioni per la callback
-     */
     public InfoCallback(Notify_Interface client, String nickUtente) {
         this.client = client;
         this.nickUtente = nickUtente;

@@ -6,7 +6,6 @@ import Model.User;
 import java.io.*;
 import java.net.*;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -64,7 +63,17 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                 String[] command = s.split(" ");
                 switch (command[0].toLowerCase()){
                     case "register":
-                        register(command,registerRMI);
+                        if(command.length > 3){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
+                            break;
+                        }
+                        else if(command.length < 3){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            register(command, registerRMI);
+                        }
                         break;
                     case "login":
                         if(command.length > 3){
@@ -83,112 +92,253 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
                             boolean resultLogin = login(command);
                             if(resultLogin){
                                 alreadyLogged = true;
-                                System.out.println("Registrazione di " + command[1] + " alla callback");
                                 registerRMI.registerForCallback(expCallback,command[1]);
                             }
                         }
                         break;
                     case "logout":
-                        boolean resultLogout = false;
-                        if(alreadyLogged)
-                            resultLogout = logout(command);
-                        else System.err.println("Non c'è nessun utente collegato, impossibile effettuare il logout");
-                        if(resultLogout) {
-                            alreadyLogged = false;
-                            System.out.println("Utente: " + command[1] + " scollegato");
-                            ok = false;
+                        if(command.length > 2){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            boolean resultLogout = false;
+                            if (alreadyLogged)
+                                resultLogout = logout(command);
+                            else
+                                System.err.println("Non c'è nessun utente collegato, impossibile effettuare il logout");
+                            if (resultLogout) {
+                                alreadyLogged = false;
+                                System.out.println("Utente: " + command[1] + " scollegato");
+                                ok = false;
+                            }
                         }
                         break;
                     case "listusers":
-                        if(!alreadyLogged) {
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 1){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        listusers(command);
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            listusers(command);
+                        }
                         break;
                     case "listonlineusers":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 1){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        listonlineusers(command);
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            listonlineusers(command);
+                        }
                         break;
                     case "listprojects":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 1){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        listProjects(command);
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            listProjects(command);
+                        }
                         break;
                     case "createproject":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 2){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        createProject(command);
+                        else if(command.length < 2){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else{
+                            if(!alreadyLogged){
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            createProject(command);
+                        }
                         break;
                     case "addmember":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 3){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        addmember(command);
+                        else if(command.length < 3){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            addmember(command);
+                        }
                         break;
                     case "showmembers":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 2){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        showmembers(command);
+                        else if(command.length < 2){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            showmembers(command);
+                        }
                         break;
                     case "showcards":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 2){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        showcards(command);
+                        else if(command.length < 2){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            showcards(command);
+                        }
+                        break;
+                    case "showcard":
+                        if(command.length>3){
+                            System.err.println("hai inserito troppi argomenti per questo comando");
+                            break;
+                        }
+                        else if(command.length<3) {
+                            System.err.println("hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            showcard(command);
+                        }
                         break;
                     case "addcard":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 4){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        addCard(command);
+                        else if(command.length < 4){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            addCard(command);
+                        }
                         break;
                     case "movecard":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 5){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        movecard(command);
+                        else if(command.length < 5){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            movecard(command);
+                        }
                         break;
                     case "getcardhistory":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 3){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        getCardHistory(command);
+                        else if(command.length < 3){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            getCardHistory(command);
+                        }
                         break;
                     case "readchat":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 2){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        readChat(command);
+                        else if(command.length < 2){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            readChat(command);
+                        }
                         break;
                     case "sendchatmsg":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 2){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        sendChatMsg(command,in);
+                        else if(command.length < 2){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if (!alreadyLogged) {
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            sendChatMsg(command, in);
+                        }
                         break;
                     case "cancelproject":
-                        if(!alreadyLogged){
-                            System.err.println("Prima devi effettuare il login");
+                        if(command.length > 2){
+                            System.err.println("Hai inserito troppi argomenti per questo comando");
                             break;
                         }
-                        cancelProject(command);
+                        else if(command.length < 2){
+                            System.err.println("Hai inserito pochi argomenti per questo comando");
+                            break;
+                        }
+                        else {
+                            if(!alreadyLogged){
+                                System.err.println("Prima devi effettuare il login");
+                                break;
+                            }
+                            cancelProject(command);
+                        }
                         break;
                     case "help":
                         help();
@@ -204,6 +354,9 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             }
         } catch (IOException | NotBoundException | ClassNotFoundException e) {
             e.printStackTrace();
+        } catch (NullPointerException np){
+            System.err.println("Eccezione rilevata");
+            alreadyLogged = false;
         }
         System.exit(0);
     }
@@ -299,7 +452,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
 
     public void listProjects(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
-        ArrayList<Project> list= (ArrayList<Project>) ois.readObject();
+        ArrayList<Project> list = (ArrayList<Project>) ois.readObject();
         if(list == null){
             System.err.println("L'utente non è membro di nessun progetto");
         }else{
@@ -307,7 +460,6 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
             for(Project currProject: list)
                 System.out.println(currProject.getName());
         }
-
     }
 
     public void createProject(String[] command) throws IOException, ClassNotFoundException {
@@ -335,32 +487,56 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     public void showmembers(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
         ToClient<String> result = (ToClient<String>) ois.readObject();
-        if(result.getMessage().equals("OK")){
-            System.out.println("Utenti del progetto " + command[1] + ": ");
-            for(String currUser: result.getList()){
-                System.out.println(currUser);
-            }
+        if(result == null)
+            System.err.println("Impossibile recuperare la lista degli utenti al momento");
+        else{
 
-        }else System.err.println(result.getMessage());
+            if(result.getMessage().equals("OK")){
+                System.out.println("Utenti del progetto " + command[1] + ": ");
+                for(String currUser: result.getList()){
+                    System.out.println(currUser);
+                }
+            }else System.err.println(result.getMessage());
+        }
     }
 
     public void showcards(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
         ToClient<Card> result = (ToClient<Card>) ois.readObject();
-        System.out.println("result size: " + result.getList().size());
+        if(result == null)
+            System.err.println("Impossibile mostrare card al momento");
+        else{
+            if(result.getMessage().equals("OK")){
+                if(result.getList().size() == 0){
+                    System.out.println("Il progetto non contiene nessuna card");
+                }
+                for(Card currCard: result.getList()){
 
-        if(result.getMessage().equals("OK")){
-            if(result.getList().size() == 0){
-                System.out.println("Il progetto non contiene nessuna card");
-            }
-            for(Card currCard: result.getList()){
+                    System.out.println("Card: " +currCard.getName());
+                    System.out.println("Descrizione: " + currCard.getDescription());
+                }
 
-                System.out.println("Card: " +currCard.getName());
-                System.out.println("Descrizione: " + currCard.getDescription());
-                System.out.println("History: " + currCard.getCardHistory());
-            }
+            }else System.err.println(result.getMessage());
+        }
+    }
 
-        }else System.err.println(result.getMessage());
+    public void showcard(String[] command) throws IOException, ClassNotFoundException {
+        oos.writeObject(command);
+        ToClient<Card> result = (ToClient<Card>) ois.readObject();
+        if(result == null)
+            System.err.println("Impossibile mostrare card al momento");
+        else{
+            if(result.getMessage().equals("OK")){
+                for(Card currCard : result.getList()){
+                    if(currCard.getName().equals(command[2])){
+                        System.out.println("Card: " +currCard.getName());
+                        System.out.println("Descrizione: " + currCard.getDescription());
+                        int tmp = currCard.getCardHistory().size();
+                        System.out.println("Lista: " + currCard.getCardHistory().get(tmp-1));
+                    }
+                }
+            }else System.err.println(result.getMessage());
+        }
     }
 
     public void addCard(String[] command) throws IOException, ClassNotFoundException {
@@ -375,6 +551,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         oos.writeObject(command);
         String result = (String) ois.readObject();
         if(result.equals("OK")){
+
             System.out.println("card: " + command[2] + " spostata a: " + command[4]);
         }else System.err.println(result);
     }
@@ -382,6 +559,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     public void getCardHistory(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
         ToClient<String> result = (ToClient<String>) ois.readObject();
+
         if(result.getMessage().equals("OK")){
             System.out.println("Card history: ");
 
@@ -395,57 +573,66 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     public void readChat(String[] command) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
         ToClientChat result;
+
         boolean ok = true;
         result = (ToClientChat) ois.readObject();
-        if(result.getMessage().equals("OK")){
-            DatagramPacket receivedPacket;
-            for(infoMultiCastConnection info: multiCastAddresses){
-                if(info.getmAddress().equals(result.getMulticastChat())){
-                    while(ok){
-                        byte[] receiveBuffer = new byte[8192]; //alloco il buffer per la ricezione dei messaggi
-                        receivedPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-                        try{
-                            info.getMulticastsocket().setSoTimeout(2000);
-                            info.getMulticastsocket().receive(receivedPacket);
-                            String byteToString = new String(receivedPacket.getData(), 0, receivedPacket.getLength());
-                            System.out.println(byteToString);
-                        } catch (SocketTimeoutException e) {
-                            System.out.println("messaggi finiti");
-                            ok = false;
-                        }
+        if(result == null){
+            System.err.println("Impossibile leggere la chat al momento");
+        }
+        else{
+            if(result.getMessage().equals("OK")){
+                DatagramPacket receivedPacket;
+                for(infoMultiCastConnection info: multiCastAddresses){
+                    if(info.getmAddress().equals(result.getMulticastChat())){
+                        while(ok){
+                            byte[] receiveBuffer = new byte[8192]; //alloco il buffer per la ricezione dei messaggi
+                            receivedPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                            try{
+                                info.getMulticastsocket().setSoTimeout(2000);
+                                info.getMulticastsocket().receive(receivedPacket);
+                                String byteToString = new String(receivedPacket.getData(), 0, receivedPacket.getLength());
+                                System.out.println(byteToString);
+                            } catch (SocketTimeoutException e) {
+                                System.out.println("messaggi finiti");
+                                ok = false;
+                            }
 
+                        }
                     }
                 }
-            }
 
-        }else System.err.println(result);
+            }else System.err.println(result.getMessage());
+        }
+
     }
 
     public void sendChatMsg(String[] command, Scanner in) throws IOException, ClassNotFoundException {
         oos.writeObject(command);
         String message;
         ToClientChat result;
-        System.out.println("Inserisci il messaggio da inviare: ");
-        message = in.nextLine();
-        byte[] sendBuffer = message.getBytes();
 
         result = (ToClientChat) ois.readObject();
-
-        if(result.getMessage().equals("OK")){
-            DatagramPacket packetToSend;
-            for(infoMultiCastConnection info: multiCastAddresses){
-                System.out.println("sendchatmsg in clientmain");
-                if(info.getmAddress().equals(result.getMulticastChat())){
-                    packetToSend = new DatagramPacket(sendBuffer, sendBuffer.length,
-                            InetAddress.getByName(info.getmAddress()),info.getPort());
-                    info.getMulticastsocket().send(packetToSend);
-                    System.out.println("messaggio inviato");
+        if(result == null){
+            System.err.println("Impossibile leggere la chat al momento");
+        }
+        else{
+            if(result.getMessage().equals("OK")){
+                System.out.println("Inserisci il messaggio da inviare: ");
+                message = in.nextLine();
+                byte[] sendBuffer = message.getBytes();
+                DatagramPacket packetToSend;
+                for(infoMultiCastConnection info: multiCastAddresses){
+                    if(info.getmAddress().equals(result.getMulticastChat())){
+                        packetToSend = new DatagramPacket(sendBuffer, sendBuffer.length,
+                                InetAddress.getByName(info.getmAddress()),info.getPort());
+                        info.getMulticastsocket().send(packetToSend);
+                        System.out.println("messaggio inviato");
+                    }
                 }
-            }
 
 
-        }else System.err.println(result);
-
+            }else System.err.println(result.getMessage());
+        }
 
     }
 
@@ -463,7 +650,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
     @Override
     public void notifyEvent(String userName, String status) {
         boolean found = false;
-        System.out.println("Richiesta di aggiornamento di stato " + userName + " " + status);
+        System.out.println(userName + " passa: " + status);
         for(UserAndStatus curr: listUsersStatus)
             if(curr.getUserName().equals(userName)) {
                 found = true;
@@ -512,6 +699,7 @@ public class ClientMain extends RemoteObject implements Notify_Interface{
         System.out.println("addmember projectName user: aggiunge al progetto un utente user");
         System.out.println("showmembers projectName: recupera la lista degli utenti del progetto");
         System.out.println("showcards projectName: recupera la lista delle cards del progetto");
+        System.out.println("showcard projectName cardName: recupera le informazioni sulla specifica card del progetto");
         System.out.println("addcard projectName cardName description: aggiunge una card con relativa" +
                            "descrizione al progetto ");
         System.out.println("movecard projectName cardName startList finishList: sposta la card da una " +

@@ -58,7 +58,6 @@ public class SignedUpProjects {
     }
 
     public String addProject(Project project){
-        System.out.println("Thread in signedUpProjects ADDPROJECT: " + Thread.currentThread().getName());
         if(projects.putIfAbsent(project.getName(),project) == null){
             this.store(); //aggiungo il progetto e salvo il file
             return "OK";
@@ -75,7 +74,6 @@ public class SignedUpProjects {
     }
 
     public synchronized void store(){
-        System.out.println("Thread in signedUpProjects STORE: " + Thread.currentThread().getName());
 
         try {
             FileOutputStream fos = new FileOutputStream(file);

@@ -41,11 +41,6 @@ public class User implements Serializable {
        this.status = status;
     }
 
-    public void changeStatus(String newStatus){
-        if(newStatus.equals("online") || newStatus.equals("Online")) this.status = "online";
-        else if(newStatus.equals("offline") || newStatus.equals("Offline")) this.status = "offline";
-    }
-
     @Override
     public String toString() {
         return "User{" +

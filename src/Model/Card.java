@@ -8,13 +8,11 @@ import java.util.ArrayList;
  */
 public class Card implements Serializable {
 
-    private Card card;
     private String description;
     private String name;
     private ArrayList<String> cardHistory;
 
     public Card(String description, String name) {
-        super();
         this.description = description;
         this.name = name;
         this.cardHistory = new ArrayList<>();
@@ -23,7 +21,7 @@ public class Card implements Serializable {
 
 
     public void updateHistory(String arrivo){
-        cardHistory.add(arrivo);
+        this.cardHistory.add(arrivo);
     }
 
     public String getDescription() {
@@ -43,7 +41,7 @@ public class Card implements Serializable {
     }
 
     public ArrayList<String> getCardHistory() {
-        return cardHistory;
+        return this.cardHistory;
     }
 
     public void setCardHistory(ArrayList<String> cardHistory) {
